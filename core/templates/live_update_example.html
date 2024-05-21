@@ -1,12 +1,15 @@
 {% extends "bootstrap/base.html" %}
 
 {% block title %}
-Live Update Clock
+Live Update
 {% endblock %}
 
 {% block content %}
     <h1>Live Update Clock</h1>
     <div id="clock"></div>
+    <div>
+        <img id="graph" src="{{ url_for('core.static', filename='image/graph.png') }}"/>
+    </div>
 {% endblock %}
 
 {% block scripts %}
@@ -22,7 +25,22 @@ Live Update Clock
                 }
             });
         }
+        
+        function updateGraph() {
+            $.ajax({
+                url: "{{ url_for('core.graph_update') }}",
+                type: "GET",
+                success: function(response) {
+                    console.log(response);
+                    var imageUrl = "{{ url_for('core.static', filename='image/graph.png') }}";
+                    var uniqueImageUrl = imageUrl + "?t=" + new Date().getTime();
+                    $("#graph").attr('src', uniqueImageUrl);
+                }
+            });
+        }
+        updateGraph();
         updateClock();
+        setInterval(updateGraph, 500);
         setInterval(updateClock, 1000);
     });
 </script>

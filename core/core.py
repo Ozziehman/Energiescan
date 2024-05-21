@@ -1,11 +1,16 @@
 import os
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 import datetime
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 print(dir_path)
 core = Blueprint('core', __name__,
     static_folder='static',
+    static_url_path='/core/static',
     template_folder='templates')
 
 @core.route('/')
@@ -27,3 +32,39 @@ def live_update_example():
 def clock_update():
     current_time = datetime.datetime.now().strftime("%H:%M:%S")
     return current_time
+
+
+x_data = [np.arange(0, 10, 0.1) for _ in range(4)]
+y_data = [np.random.rand(len(x_data[i])) for i in range(4)]
+@core.route('/graph_update', methods=['GET'])
+def graph_update():
+
+    global x_data, y_data
+
+    fig, axs = plt.subplots(2, 2, figsize=(10, 10))
+
+    plot_types = ['line', 'scatter', 'bar', 'hist']
+
+    for i in range(2):
+        for j in range(2):
+            #append data to end of array
+            x_data[2*i + j] = np.append(x_data[2*i + j], x_data[2*i + j][-1] + 0.1)
+            y_data[2*i + j] = np.append(y_data[2*i + j], np.random.rand(1))
+
+            if len(x_data[2*i + j]) > 50:
+                x_data[2*i + j] = x_data[2*i + j][-50:]
+                y_data[2*i + j] = y_data[2*i + j][-50:]
+
+            if plot_types[2*i + j] == 'line':
+                axs[i, j].plot(x_data[2*i + j], y_data[2*i + j])
+            elif plot_types[2*i + j] == 'scatter':
+                axs[i, j].scatter(x_data[2*i + j], y_data[2*i + j])
+            elif plot_types[2*i + j] == 'bar':
+                axs[i, j].bar(x_data[2*i + j], y_data[2*i + j])
+            elif plot_types[2*i + j] == 'hist':
+                axs[i, j].hist(y_data[2*i + j], bins=10)
+
+    file_path = os.path.join(dir_path, 'static/image', 'graph.png')
+    plt.savefig(file_path)
+
+    return "graph.png was changed" #could return the path but due to the way pahting works with blueprint this s just to tell the client that the image was saved
