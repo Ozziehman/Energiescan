@@ -1,22 +1,26 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>My Dummy HTML Page</title>
-</head>
-<body>
-    <h1>Energiescan</h1>
-    <p>This is a simple HTML page created for demonstration purposes.</p>
-    <h2>Dummy Form</h2>
-    <form action="{{ url_for('site.dummy_action') }}" method="POST">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required>
-        <br>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required>
-        <br>
-        <label for="message">Message:</label>
-        <textarea id="message" name="message" required></textarea>
-        <br>
-        <button type="submit">Submit</button>
-</body>
-</html>
+{% extends "bootstrap/base.html" %}
+
+{% block title %}
+My Dummy HTML Page
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>Energiescan</h1>
+        <p>This is a simple HTML page created for demonstration purposes.</p>
+        <h2>Dummy Form</h2>
+        <form action="{{ url_for('core.dummy_action') }}" method="POST" class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required class="form-control">
+            <br>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required class="form-control">
+            <br>
+            <label for="message">Message:</label>
+            <textarea id="message" name="message" required class="form-control"></textarea>
+            <br>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+        <a href="{{ url_for('core.live_update_example') }}" class="btn btn-primary">Go to live update example page</a>
+    </div>
+{% endblock %}

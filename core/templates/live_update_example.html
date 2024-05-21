@@ -1,0 +1,29 @@
+{% extends "bootstrap/base.html" %}
+
+{% block title %}
+Live Update Clock
+{% endblock %}
+
+{% block content %}
+    <h1>Live Update Clock</h1>
+    <div id="clock"></div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    $(document).ready(function() {
+        function updateClock() {
+            $.ajax({
+                url: "{{ url_for('core.clock_update') }}",
+                type: "GET",
+                success: function(response) {
+                    $("#clock").text(response);
+                }
+            });
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+    });
+</script>
+{% endblock %}

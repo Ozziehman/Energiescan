@@ -1,0 +1,17 @@
+{% extends "bootstrap/base.html" %}
+
+{% block title %}
+My Dummy HTML Page
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1 class="my-3">{{ name }}</h1>
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{ email }}</h5>
+                <p class="card-text">{{ message }}</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
