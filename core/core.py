@@ -19,7 +19,7 @@ def dummy_action():
     message = request.form['message']
     return render_template('dummy_page.html', name=name, email=email, message=message)
 
-@core.route('/live_update_example')
+@core.route('/live_update_example_this_is_the_url')
 def live_update_example():
     return render_template('live_update_example.html')
 
