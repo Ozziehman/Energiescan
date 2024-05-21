@@ -5,3 +5,4 @@ from flask_bootstrap import Bootstrap
 app = Flask(__name__)
 app.register_blueprint(core)
 Bootstrap(app)
+app.run()
