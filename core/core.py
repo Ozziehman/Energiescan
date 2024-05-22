@@ -1,4 +1,5 @@
 import os
+import random
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 import datetime
 import numpy as np
@@ -33,6 +34,9 @@ def clock_update():
     current_time = datetime.datetime.now().strftime("%H:%M:%S")
     return current_time
 
+@core.route('/charts_simple',  methods=['GET'])
+def charts_simple():
+    return render_template('charts_simple.html')
 
 x_data = [np.arange(0, 10, 0.1) for _ in range(4)]
 y_data = [np.random.rand(len(x_data[i])) for i in range(4)]
@@ -68,3 +72,11 @@ def graph_update():
     plt.savefig(file_path)
 
     return "graph.png was changed" #could return the path but due to the way pahting works with blueprint this s just to tell the client that the image was saved
+
+
+@core.route('/get_new_usage', methods=['GET'])
+def get_new_usage():
+    
+    new_usage = random.randint(0, 100)
+
+    return str(new_usage)
