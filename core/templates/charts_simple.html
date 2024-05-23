@@ -5,9 +5,15 @@ Charts test
 {% endblock %}
 
 {% block content %}
-    <div class="container">
-        <h1>ApexCharts Test</h1>
-        <div id="chart"></div>
+    <div class="container" style="position: relative;">
+        <div style="position: absolute; left: 0; width: 400px;">
+            <h1>Current?</h1>
+            <div id="chart1" style="width: 400px; height: 300px;"></div>
+        </div>
+        <div style="position: absolute; right: 0; width: 400px;">
+            <h1>Prediction?</h1>
+            <div id="chart2" style="width: 400px; height: 300px;"></div> 
+        </div>
     </div>
 {% endblock %}
 
@@ -16,7 +22,7 @@ Charts test
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
     $(document).ready(function() {
-        var options = {
+        var options1 = {
             chart: {
                 type: 'area'
             },
@@ -26,15 +32,16 @@ Charts test
             }],
             xaxis: {
                 categories: []
-            }
+            },
+            colors: ['#00FF00']
         }
 
-        var chart = new ApexCharts(document.querySelector("#chart"), options);
-        chart.render();
+        var chart1 = new ApexCharts(document.querySelector("#chart1"), options1);
+        chart1.render();
 
         // initial data
-        var usages = [];
-        var times = [];
+        var usages1 = [];
+        var times1 = [];
 
         setInterval(function() {
             $.ajax({
@@ -46,24 +53,80 @@ Charts test
                     var time = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
 
                     // Add the new values to the arrays
-                    usages.push(newUsage);
-                    times.push(time);
+                    usages1.push(newUsage);
+                    times1.push(time);
 
-                    // Only keep the latest 50 values
-                    if (usages.length > 50) {
-                        usages = usages.slice(usages.length - 50);
-                        times = times.slice(times.length - 50);
+                    // Only keep the latest 20 values
+                    if (usages1.length > 20) {
+                        usages1 = usages1.slice(usages1.length - 20);
+                        times1 = times1.slice(times1.length - 20);
                     }
 
                     // Update the chart
-                    chart.updateSeries([{
+                    chart1.updateSeries([{
                         name: 'Power Usage',
-                        data: usages
+                        data: usages1
                     }]);
 
-                    chart.updateOptions({
+                    chart1.updateOptions({
                         xaxis: {
-                            categories: times
+                            categories: times1
+                        }
+                    });
+                }
+            });
+        }, 1000);
+
+        var options2 = {
+            chart: {
+                type: 'area'
+            },
+            series: [{
+                name: 'Power Usage',
+                data: []
+            }],
+            xaxis: {
+                categories: []
+            },
+            colors: ['#FF0000']
+        }
+
+        var chart2 = new ApexCharts(document.querySelector("#chart2"), options2);
+        chart2.render();
+
+        // initial data
+        var usages2 = [];
+        var times2 = [];
+
+        setInterval(function() {
+            $.ajax({
+                url: "{{ url_for('core.get_future_usage_prediction') }}",
+                type: "GET",
+                success: function(newUsage) {
+                    // get current time and add 1 hour
+                    var date = new Date();
+                    date.setHours(date.getHours() + 1);
+                    var time = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+
+                    // Add the new values to the arrays
+                    usages2.push(newUsage);
+                    times2.push(time);
+
+                    // Only keep the latest 20 values
+                    if (usages2.length > 20) {
+                        usages2 = usages2.slice(usages2.length - 20);
+                        times2 = times2.slice(times2.length - 20);
+                    }
+
+                    // Update the chart
+                    chart2.updateSeries([{
+                        name: 'Power Usage',
+                        data: usages2
+                    }]);
+
+                    chart2.updateOptions({
+                        xaxis: {
+                            categories: times2
                         }
                     });
                 }

@@ -80,3 +80,10 @@ def get_new_usage():
     new_usage = random.randint(0, 100)
 
     return str(new_usage)
+
+@core.route('/get_future_usage_prediction', methods=['GET'])
+def get_future_usage_prediction():
+    
+    new_usage = random.randint(0, 100)
+
+    return str(new_usage)
