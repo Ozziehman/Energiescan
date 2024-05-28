@@ -6,7 +6,7 @@ $(document).ready(function() {
             type: 'area'
         },
         series: [{
-            name: 'Power Usage',
+            name: 'Power Generation',
             data: []
         }],
         xaxis: {
@@ -43,7 +43,7 @@ $(document).ready(function() {
 
                 // Update the chart
                 chart1_current.updateSeries([{
-                    name: 'Power Usage',
+                    name: 'Power Generation',
                     data: usages1_current
                 }]);
 
