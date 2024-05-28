@@ -34,12 +34,13 @@ def clock_update():
     current_time = datetime.datetime.now().strftime("%H:%M:%S")
     return current_time
 
-@core.route('/charts_simple',  methods=['GET'])
+@core.route('/charts',  methods=['GET'])
 def charts_simple():
     return render_template('charts_simple.html')
 
 x_data = [np.arange(0, 10, 0.1) for _ in range(4)]
 y_data = [np.random.rand(len(x_data[i])) for i in range(4)]
+
 @core.route('/graph_update', methods=['GET'])
 def graph_update():
 
