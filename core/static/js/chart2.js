@@ -15,8 +15,8 @@ $(document).ready(function() {
         colors: ['#00FF00']
     }
 
-    var chart2_prediction_current = new ApexCharts(document.querySelector("#chart2_current"), options2_current);
-    chart2_prediction_current.render();
+    var chart2_current = new ApexCharts(document.querySelector("#chart2_current"), options2_current);
+    chart2_current.render();
 
     // initial data
     var usages2_current = [];
@@ -36,20 +36,21 @@ $(document).ready(function() {
                 times2_current.push(time2_current);
 
                 // Only keep the latest 10 values
-                if (usages2_current.length > 10) {
-                    usages2_current = usages2_current.slice(usages2_current.length - 10);
-                    times2_current = times2_current.slice(times2_current.length - 10);
+                if (usages2_current.length > 100) {
+                    usages2_current = usages2_current.slice(usages2_current.length - 100);
+                    times2_current = times2_current.slice(times2_current.length - 100);
                 }
 
                 // Update the chart
-                chart2_prediction_current.updateSeries([{
+                chart2_current.updateSeries([{
                     name: 'Power Usage',
                     data: usages2_current
                 }]);
 
-                chart2_prediction_current.updateOptions({
+                chart2_current.updateOptions({
                     xaxis: {
-                        categories: times2_current
+                        categories: times2_current,
+                        min: Math.max(times2_current.length - 10, 0),
                     }
                 });
             }
@@ -93,9 +94,9 @@ $(document).ready(function() {
                 times2_prediction.push(time2_prediction);
 
                 // Only keep the latest 10 values
-                if (usages2_prediction.length > 10) {
-                    usages2_prediction = usages2_prediction.slice(usages2_prediction.length - 10);
-                    times2_prediction = times2_prediction.slice(times2_prediction.length - 10);
+                if (usages2_prediction.length > 100) {
+                    usages2_prediction = usages2_prediction.slice(usages2_prediction.length - 100);
+                    times2_prediction = times2_prediction.slice(times2_prediction.length - 100);
                 }
 
                 // Update the chart
@@ -106,7 +107,8 @@ $(document).ready(function() {
 
                 chart2_prediction.updateOptions({
                     xaxis: {
-                        categories: times2_prediction
+                        categories: times2_prediction,
+                        min: Math.max(times2_prediction.length - 10, 0),
                     }
                 });
             }

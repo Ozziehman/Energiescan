@@ -15,8 +15,8 @@ $(document).ready(function() {
         colors: ['#00FF00']
     }
 
-    var chart1_prediction_current = new ApexCharts(document.querySelector("#chart1_current"), options1_current);
-    chart1_prediction_current.render();
+    var chart1_current = new ApexCharts(document.querySelector("#chart1_current"), options1_current);
+    chart1_current.render();
 
     // initial data
     var usages1_current = [];
@@ -36,20 +36,21 @@ $(document).ready(function() {
                 times1_current.push(time1_current);
 
                 // Only keep the latest 10 values
-                if (usages1_current.length > 10) {
-                    usages1_current = usages1_current.slice(usages1_current.length - 10);
-                    times1_current = times1_current.slice(times1_current.length - 10);
+                if (usages1_current.length > 100) {
+                    usages1_current = usages1_current.slice(usages1_current.length - 100);
+                    times1_current = times1_current.slice(times1_current.length - 100);
                 }
 
                 // Update the chart
-                chart1_prediction_current.updateSeries([{
+                chart1_current.updateSeries([{
                     name: 'Power Usage',
                     data: usages1_current
                 }]);
 
-                chart1_prediction_current.updateOptions({
+                chart1_current.updateOptions({
                     xaxis: {
-                        categories: times1_current
+                        categories: times1_current,
+                        min: Math.max(times1_current.length - 10, 0),
                     }
                 });
             }
@@ -93,9 +94,9 @@ $(document).ready(function() {
                 times1_prediction.push(time1_prediction);
 
                 // Only keep the latest 10 values
-                if (usages1_prediction.length > 10) {
-                    usages1_prediction = usages1_prediction.slice(usages1_prediction.length - 10);
-                    times1_prediction = times1_prediction.slice(times1_prediction.length - 10);
+                if (usages1_prediction.length > 100) {
+                    usages1_prediction = usages1_prediction.slice(usages1_prediction.length - 100);
+                    times1_prediction = times1_prediction.slice(times1_prediction.length - 100);
                 }
 
                 // Update the chart
@@ -106,7 +107,8 @@ $(document).ready(function() {
 
                 chart1_prediction.updateOptions({
                     xaxis: {
-                        categories: times1_prediction
+                        categories: times1_prediction,
+                        min: Math.max(times1_prediction.length - 10, 0),
                     }
                 });
             }
