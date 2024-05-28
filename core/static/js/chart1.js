@@ -24,17 +24,17 @@ $(document).ready(function() {
 
     setInterval(function() {
         $.ajax({
-            url: newUsageUrl,
+            url: getCSVDataUrl,
             type: "GET",
-            success: function(newUsage) {
+            success: function(data) {
                 // get current time
-                var date1_current = new Date();
-                var time1_current = date1_current.getHours() + ":" + date1_current.getMinutes() + ":" + date1_current.getSeconds();
+                var data1_time = data['Time'];
+                var data1_usage = data['PV Productie (W)'];
 
                 // Add the new values to the arrays
-                usages1_current.push(newUsage);
-                times1_current.push(time1_current);
-
+                times1_current.push(data1_time);
+                usages1_current.push(data1_usage);
+            
                 // Only keep the latest 10 values
                 if (usages1_current.length > 100) {
                     usages1_current = usages1_current.slice(usages1_current.length - 100);
@@ -55,7 +55,7 @@ $(document).ready(function() {
                 });
             }
         });
-    }, 1000);
+    }, 100);
 
     // chart1_prediction
     var options1_prediction = {

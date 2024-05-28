@@ -1,9 +1,10 @@
 import os
 import random
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 import datetime
 import numpy as np
 import matplotlib
+import pandas as pd
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -74,7 +75,6 @@ def graph_update():
 
     return "graph.png was changed" #could return the path but due to the way pahting works with blueprint this s just to tell the client that the image was saved
 
-
 @core.route('/get_new_usage', methods=['GET'])
 def get_new_usage():
     
@@ -88,3 +88,22 @@ def get_future_usage_prediction():
     new_usage = random.randint(0, 100)
 
     return str(new_usage)
+
+from flask import jsonify
+
+@core.route('/get_csv_data', methods=['GET'])
+def get_csv_data():
+    index = session.get('index', 0)
+
+    data = pd.read_csv('core/static/data/2022_15min_data.csv')
+
+    new_index = index + 1
+    session['index'] = new_index
+
+    print(data.iloc[new_index]['Time'])
+    print(data.iloc[new_index]['PV Productie (W)'])
+
+    return jsonify({
+        'Time': data.iloc[new_index]['Time'],
+        'PV Productie (W)': data.iloc[new_index]['PV Productie (W)']
+    })
