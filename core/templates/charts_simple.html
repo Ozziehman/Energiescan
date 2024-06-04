@@ -14,18 +14,20 @@ Charts test
         <!-- <div style="flex: 1 0 50%;">
             <p>PV productie voorspelling</p>
             <div id="chart1_prediction" style="width: 100%; height: 400px;"></div>
-        </div>
+        </div> -->
         
+        <!--Chart2-->
         <div style="flex: 1 0 50%;">
-            <p>Current 2</p>
+            <p>Houshold power consumption</p>
             <div id="chart2_current" style="width: 100%; height: 400px;"></div>
         </div>
-        <div style="flex: 1 0 50%;">
+        <!-- <div style="flex: 1 0 50%;">
             <p>Prediction 2</p>
             <div id="chart2_prediction" style="width: 100%; height: 400px;"></div>
-        </div>
+        </div> -->
         
-        <div style="flex: 1 0 50%;">
+        <!--Chart3-->
+        <!-- <div style="flex: 1 0 50%;">
             <p>Current 3</p>
             <div id="chart3_current" style="width: 100%; height: 400px;"></div>
         </div>
@@ -43,9 +45,10 @@ Charts test
 <script>
     var newUsageUrl = "{{ url_for('core.get_new_usage') }}";
     var futureUsageUrl = "{{ url_for('core.get_future_usage_prediction') }}";
-    var getCSVDataUrl = "{{ url_for('core.get_csv_data') }}";
+    var getCSVDataUrl = "{{ url_for('chart_data.get_csv_data_pv') }}";
+    var getCSVdataHouseholdPowerConsumptionUrl = "{{ url_for('chart_data.get_csv_data_household_power_consumption') }}";
 </script>
 <script src="/core/static/js/chart1.js"></script>
 <script src="/core/static/js/chart2.js"></script>
-<script src="/core/static/js/chart3.js"></script>
+<!-- <script src="/core/static/js/chart3.js"></script> -->
 {% endblock %}

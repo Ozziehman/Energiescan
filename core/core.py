@@ -9,7 +9,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-print(dir_path)
+# print(dir_path)
 core = Blueprint('core', __name__,
     static_folder='static',
     static_url_path='/core/static',
@@ -89,21 +89,3 @@ def get_future_usage_prediction():
 
     return str(new_usage)
 
-from flask import jsonify
-
-@core.route('/get_csv_data', methods=['GET'])
-def get_csv_data():
-    index = session.get('index', 0)
-
-    data = pd.read_csv('core/static/data/2022_15min_data.csv')
-
-    new_index = index + 1
-    session['index'] = new_index
-
-    print(data.iloc[new_index]['Time'])
-    print(data.iloc[new_index]['PV Productie (W)'])
-
-    return jsonify({
-        'Time': data.iloc[new_index]['Time'],
-        'PV Productie (W)': data.iloc[new_index]['PV Productie (W)']
-    })
