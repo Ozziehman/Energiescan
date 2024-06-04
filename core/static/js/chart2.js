@@ -31,17 +31,17 @@ $(document).ready(function() {
                 var date2_current = new Date();
                 var time2_current = date2_current.getHours() + ":" + date2_current.getMinutes() + ":" + date2_current.getSeconds();
 
-                // Add the new values to the arrays
+                // add the new values to the arrays
                 usages2_current.push(newUsage);
                 times2_current.push(time2_current);
 
-                // Only keep the latest 10 values
+                // only keep the latest 10 values
                 if (usages2_current.length > 100) {
                     usages2_current = usages2_current.slice(usages2_current.length - 100);
                     times2_current = times2_current.slice(times2_current.length - 100);
                 }
 
-                // Update the chart
+                // update the chart
                 chart2_current.updateSeries([{
                     name: 'Power Usage',
                     data: usages2_current
@@ -89,17 +89,17 @@ $(document).ready(function() {
                 date2_prediction.setSeconds(date2_prediction.getSeconds() + 10);
                 var time2_prediction = date2_prediction.getHours() + ":" + date2_prediction.getMinutes() + ":" + date2_prediction.getSeconds();
 
-                // Add the new values to the arrays
+                // add the new values to the arrays
                 usages2_prediction.push(newUsage);
                 times2_prediction.push(time2_prediction);
 
-                // Only keep the latest 10 values
+                // only keep the latest 10 values
                 if (usages2_prediction.length > 100) {
                     usages2_prediction = usages2_prediction.slice(usages2_prediction.length - 100);
                     times2_prediction = times2_prediction.slice(times2_prediction.length - 100);
                 }
 
-                // Update the chart
+                // update the chart
                 chart2_prediction.updateSeries([{
                     name: 'Power Usage',
                     data: usages2_prediction

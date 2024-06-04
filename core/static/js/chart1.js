@@ -31,17 +31,17 @@ $(document).ready(function() {
                 var data1_time = data['Time'];
                 var data1_usage = data['PV Productie (W)'];
 
-                // Add the new values to the arrays
+                // add the new values to the arrays
                 times1_current.push(data1_time);
                 usages1_current.push(data1_usage);
             
-                // Only keep the latest 10 values
+                // only keep the latest 10 values
                 if (usages1_current.length > 100) {
                     usages1_current = usages1_current.slice(usages1_current.length - 100);
                     times1_current = times1_current.slice(times1_current.length - 100);
                 }
 
-                // Update the chart
+                // update the chart
                 chart1_current.updateSeries([{
                     name: 'Power Generation',
                     data: usages1_current
@@ -89,17 +89,17 @@ $(document).ready(function() {
                 date1_prediction.setSeconds(date1_prediction.getSeconds() + 10);
                 var time1_prediction = date1_prediction.getHours() + ":" + date1_prediction.getMinutes() + ":" + date1_prediction.getSeconds();
 
-                // Add the new values to the arrays
+                // add the new values to the arrays
                 usages1_prediction.push(newUsage);
                 times1_prediction.push(time1_prediction);
 
-                // Only keep the latest 10 values
+                // only keep the latest 10 values
                 if (usages1_prediction.length > 100) {
                     usages1_prediction = usages1_prediction.slice(usages1_prediction.length - 100);
                     times1_prediction = times1_prediction.slice(times1_prediction.length - 100);
                 }
 
-                // Update the chart
+                // update  chart
                 chart1_prediction.updateSeries([{
                     name: 'Power Usage',
                     data: usages1_prediction

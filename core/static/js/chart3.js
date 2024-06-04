@@ -35,13 +35,13 @@ $(document).ready(function() {
                 usages3_current.push(newUsage);
                 times3_current.push(time3_current);
 
-                // Only keep the latest 10 values
+                // only keep the latest 10 values
                 if (usages3_current.length > 100) {
                     usages3_current = usages3_current.slice(usages3_current.length - 100);
                     times3_current = times3_current.slice(times3_current.length - 100);
                 }
 
-                // Update the chart
+                // update the chart
                 chart3_current.updateSeries([{
                     name: 'Power Usage',
                     data: usages3_current
@@ -89,17 +89,17 @@ $(document).ready(function() {
                 date3_prediction.setSeconds(date3_prediction.getSeconds() + 10);
                 var time3_prediction = date3_prediction.getHours() + ":" + date3_prediction.getMinutes() + ":" + date3_prediction.getSeconds();
 
-                // Add the new values to the arrays
+                // add the new values to the arrays
                 usages3_prediction.push(newUsage);
                 times3_prediction.push(time3_prediction);
 
-                // Only keep the latest 10 values
+                // only keep the latest 10 values
                 if (usages3_prediction.length > 100) {
                     usages3_prediction = usages3_prediction.slice(usages3_prediction.length - 100);
                     times3_prediction = times3_prediction.slice(times3_prediction.length - 100);
                 }
 
-                // Update the chart
+                // update the chart
                 chart3_prediction.updateSeries([{
                     name: 'Power Usage',
                     data: usages3_prediction
