@@ -5,35 +5,41 @@ Charts test
 {% endblock %}
 
 {% block content %}
-    <div class="container" style="display: flex; flex-wrap: wrap;">
+    <div class="container">
         <!--Chart1-->
-        <div style="flex: 1 0 50%;">
-            <p>PV Productie</p>
-            <div id="chart1_current" style="width: 100%; height: 400px;"></div>
+        <div style="display: flex; flex-wrap: wrap;">
+            <div style="flex: 1 0 100%;">
+                <p>PV Productie</p>
+                <div id="chart1_current" style="width: 100%; height: 400px;"></div>
+            </div>
+            <!-- <div style="flex: 1 0 100%;">
+                <p>PV productie voorspelling</p>
+                <div id="chart1_prediction" style="width: 100%; height: 400px;"></div>
+            </div> -->
         </div>
-        <!-- <div style="flex: 1 0 50%;">
-            <p>PV productie voorspelling</p>
-            <div id="chart1_prediction" style="width: 100%; height: 400px;"></div>
-        </div> -->
         
         <!--Chart2-->
-        <div style="flex: 1 0 50%;">
-            <p>Houshold power consumption</p>
-            <div id="chart2_current" style="width: 100%; height: 400px;"></div>
+        <div style="display: flex; flex-wrap: wrap;">
+            <div style="flex: 1 0 100%;">
+                <p>Houshold power consumption</p>
+                <div id="chart2_current" style="width: 100%; height: 400px;"></div>
+            </div>
+            <div style="flex: 1 0 100%;">
+                <p>Prediction 2</p>
+                <div id="chart2_prediction" style="width: 100%; height: 400px;"></div>
+            </div>
         </div>
-        <!-- <div style="flex: 1 0 50%;">
-            <p>Prediction 2</p>
-            <div id="chart2_prediction" style="width: 100%; height: 400px;"></div>
-        </div> -->
         
         <!--Chart3-->
-        <!-- <div style="flex: 1 0 50%;">
-            <p>Current 3</p>
-            <div id="chart3_current" style="width: 100%; height: 400px;"></div>
-        </div>
-        <div style="flex: 1 0 50%;">
-            <p>Prediction 3</p>
-            <div id="chart3_prediction" style="width: 100%; height: 400px;"></div>
+        <!-- <div style="display: flex; flex-wrap: wrap;">
+            <div style="flex: 1 0 100%;">
+                <p>Current 3</p>
+                <div id="chart3_current" style="width: 100%; height: 400px;"></div>
+            </div>
+            <div style="flex: 1 0 100%;">
+                <p>Prediction 3</p>
+                <div id="chart3_prediction" style="width: 100%; height: 400px;"></div>
+            </div>
         </div> -->
     </div>
 
