@@ -1,3 +1,6 @@
+# datasets too large
+core/static/data/household_power_consumption.csv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
