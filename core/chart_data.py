@@ -17,7 +17,7 @@ chart_data = Blueprint('chart_data', __name__,
 
 # Global variables for the data
 data_pv = pd.read_csv('core/static/data/2022_15min_data.csv')
-data_household_power_consumption = pd.read_csv('core/static/data/household_power_consumption.csv', low_memory=False)
+data_household_power_consumption = pd.read_csv('core/static/data/household_power_consumption.csv', sep=';', low_memory=False)
 
 @chart_data.route('/get_csv_data_pv', methods=['GET'])
 def get_csv_data_pv():
