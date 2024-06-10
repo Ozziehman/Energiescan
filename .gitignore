@@ -1,5 +1,7 @@
 # datasets too large
 core/static/data/household_power_consumption.csv
+core/static/data/household_power_consumption_processed.csv
+core/static/data/household_power_consumption_datetime_processed.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
