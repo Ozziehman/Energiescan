@@ -42,6 +42,13 @@ def create_sequences(data, seq_length, prediction_length):
     print(f"Shapes: X={arrayX.shape}, y={arrayY.shape}")
     return arrayX, arrayY
 
+def create_new_sequences(data, seq_length):
+    X = []
+    for i in range(len(data) - seq_length + 1):
+        seq = data[i:(i + seq_length), :]
+        X.append(seq)
+    return np.array(X)
+
 
 @chart_data.route('/get_csv_data_pv', methods=['GET'])
 def get_csv_data_pv():
@@ -74,28 +81,46 @@ def get_csv_data_household_power_consumption():
     })
     
     
+# @chart_data.route('/get_pv_prediction', methods=['GET'])
+# def get_pv_prediction():
+#     # Fetch past & ahead amount
+#     n_sequence_past = 720
+#     n_ahead_prediction = 154
+
+#     # Error handling
+#     index = 0
+#     if index + n_sequence_past + n_ahead_prediction > len(df_pv):
+#         return jsonify({'error': 'Not enough data for prediction'})
+
+#     # Get the required data slice
+#     data_slice = df_pv.iloc[index:index + n_sequence_past + n_ahead_prediction].values
+
+#     # Create sequences
+#     X, y = create_sequences(data_slice, seq_length=n_sequence_past, prediction_length=n_ahead_prediction)
+
+#     # Predict (only take the first prediction for the given range)
+#     predictions = model_pv.predict(X)[0]
+
+#     return jsonify({'predictions': predictions.tolist()})
+
 @chart_data.route('/get_pv_prediction', methods=['GET'])
 def get_pv_prediction():
-    # Fetch past & ahead amount
-    n_sequence_past = 720
-    n_ahead_prediction = 154
-
-    # Error handling
-    index = 0
-    if index + n_sequence_past + n_ahead_prediction > len(df_pv):
-        return jsonify({'error': 'Not enough data for prediction'})
-
-    # Get the required data slice
-    data_slice = df_pv.iloc[index:index + n_sequence_past + n_ahead_prediction].values
-
-    # Create sequences
-    X, y = create_sequences(data_slice, seq_length=n_sequence_past, prediction_length=n_ahead_prediction)
-
-    # Predict (only take the first prediction for the given range)
-    predictions = model_pv.predict(X)[0]
-
-    return jsonify({'predictions': predictions.tolist()})
-
+    model = load_model('core/static/data/lstm_model_pv.h5', custom_objects={'mae': 'mae'})
+    scaler = MinMaxScaler()
+    train_data = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False)
+    train_data = train_data[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
+    train_scaled = scaler.fit_transform(train_data)
+    seq_length = 720
+    # new_data = the input, SHOULD BE CHANGED TO ACTUAL INPUT or SIMULATED DATA TODO maybe forloop through testset?
+    new_data = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False).tail(720)
+    new_data = new_data[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
+    new_data_scaled = scaler.transform(new_data)
+    X_new = create_new_sequences(new_data_scaled, seq_length)
+    y_new_pred_scaled = model.predict(X_new)
+    y_new_pred_reshaped = y_new_pred_scaled.reshape(-1, 1)
+    dummy_features_new = np.zeros((y_new_pred_reshaped.shape[0], train_scaled.shape[1] - 1))
+    y_new_pred_inv = scaler.inverse_transform(np.concatenate((y_new_pred_reshaped, dummy_features_new), axis=1))[:, 0]
+    return jsonify({'predictions': y_new_pred_inv.tolist()})
 
 @chart_data.route('/get_household_power_consumption_prediction', methods=['GET'])
 def get_household_power_consumption_prediction():
