@@ -7,6 +7,8 @@ import matplotlib
 import pandas as pd
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from tensorflow.keras.models import load_model
+from sklearn.preprocessing import MinMaxScaler
 
 # dir_path = os.path.dirname(os.path.realpath(__file__))
 # print(dir_path)
@@ -18,6 +20,13 @@ chart_data = Blueprint('chart_data', __name__,
 # Global variables for the data
 data_pv = pd.read_csv('core/static/data/2022_15min_data.csv')
 data_household_power_consumption = pd.read_csv('core/static/data/household_power_consumption.csv', sep=';', low_memory=False)
+
+# Load the trained LSTM model
+model_pv = load_model('core/static/data/lstm_model_pv.h5')
+model_household = load_model('core/static/data/lstm_model_household.h5')
+
+# Initialize and fit the scaler on the historical data
+scaler = MinMaxScaler(feature_range=(0, 1))
 
 @chart_data.route('/get_csv_data_pv', methods=['GET'])
 def get_csv_data_pv():
@@ -48,3 +57,59 @@ def get_csv_data_household_power_consumption():
         'Global_active_power': data_household_power_consumption.iloc[new_index]['Global_active_power'],
         'Global_reactive_power': data_household_power_consumption.iloc[new_index]['Global_reactive_power']
     })
+    
+    
+@chart_data.route('/get_pv_prediction', methods=['GET'])
+def get_pv_prediction():
+    # Fetch past & ahead amount
+    n_sequence_past = 720
+    n_ahead_prediction = 154
+    
+    # Error handling
+    index = session.get('index_pv', 0)
+    if index + n_sequence_past + n_ahead_prediction > len(data_pv):
+        return jsonify({'error': 'Not enough data for prediction'})
+
+    # Get the required data slice
+    data_slice = data_pv.iloc[index:index + n_sequence_past + n_ahead_prediction]
+
+    # Preprocess the data slice
+    data_scaled = scaler.transform(data_slice)
+    X_input = data_scaled[:n_sequence_past].reshape(1, n_sequence_past, -1)
+
+    # Predict
+    predictions_scaled = model_pv.predict(X_input)
+    
+    # Inverse transform the predictions
+    dummy_features = np.zeros((predictions_scaled.shape[1], data_scaled.shape[1] - 1))
+    predictions_inv = scaler.inverse_transform(np.concatenate((predictions_scaled.reshape(-1, 1), dummy_features), axis=1))[:, 0]
+
+    return jsonify({'predictions': predictions_inv.tolist()})
+
+
+@chart_data.route('/get_household_power_consumption_prediction', methods=['GET'])
+def get_household_power_consumption_prediction():
+    # Fetch past & ahead amount
+    n_sequence_past = 720
+    n_ahead_prediction = 154
+    
+    # Error handling
+    index = session.get('index_household_power_consumption', 0)
+    if index + n_sequence_past + n_ahead_prediction > len(data_household_power_consumption):
+        return jsonify({'error': 'Not enough data for prediction'})
+
+    # Get the required data slice
+    data_slice = data_household_power_consumption.iloc[index:index + n_sequence_past + n_ahead_prediction]
+
+    # Preprocess the data slice
+    data_scaled = scaler.transform(data_slice)
+    X_input = data_scaled[:n_sequence_past].reshape(1, n_sequence_past, -1)
+
+    # Predict
+    predictions_scaled = model_household.predict(X_input)
+    
+    # Inverse transform the predictions
+    dummy_features = np.zeros((predictions_scaled.shape[1], data_scaled.shape[1] - 1))
+    predictions_inv = scaler.inverse_transform(np.concatenate((predictions_scaled.reshape(-1, 1), dummy_features), axis=1))[:, 0]
+
+    return jsonify({'predictions': predictions_inv.tolist()})

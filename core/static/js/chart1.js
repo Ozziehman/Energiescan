@@ -18,6 +18,24 @@ $(document).ready(function() {
     var chart1_current = new ApexCharts(document.querySelector("#chart1_current"), options1_current);
     chart1_current.render();
 
+    // chart1_prediction
+    var options1_prediction = {
+        chart: {
+            type: 'area'
+        },
+        series: [{
+            name: 'Power Generation Prediction',
+            data: []
+        }],
+        xaxis: {
+            categories: []
+        },
+        colors: ['#FF0000']
+    }
+
+    var chart1_prediction = new ApexCharts(document.querySelector("#chart1_prediction"), options1_prediction);
+    chart1_prediction.render();
+
     // initial data
     var usages1_current = [];
     var times1_current = [];
@@ -35,7 +53,7 @@ $(document).ready(function() {
                 times1_current.push(data1_dateTime);
                 usages1_current.push(data1_usage);
             
-                // only keep the latest 10 values
+                // only keep the latest 100 values
                 if (usages1_current.length > 100) {
                     usages1_current = usages1_current.slice(usages1_current.length - 100);
                     times1_current = times1_current.slice(times1_current.length - 100);
@@ -57,61 +75,40 @@ $(document).ready(function() {
         });
     }, 300);
 
-    // // chart1_prediction
-    // var options1_prediction = {
-    //     chart: {
-    //         type: 'area'
-    //     },
-    //     series: [{
-    //         name: 'Power Usage',
-    //         data: []
-    //     }],
-    //     xaxis: {
-    //         categories: []
-    //     },
-    //     colors: ['#FF0000']
-    // }
+    // function to get prediction data
+    function getPredictionData() {
+        $.ajax({
+            url: '/get_pv_prediction',
+            type: 'GET',
+            success: function(response) {
+                var predictions = response['predictions'];
 
-    // var chart1_prediction = new ApexCharts(document.querySelector("#chart1_prediction"), options1_prediction);
-    // chart1_prediction.render();
+                var current_time = new Date();
+                var times1_prediction = [];
 
-    // // initial data
-    // var usages1_prediction = [];
-    // var times1_prediction = [];
+                for (var i = 0; i < predictions.length; i++) {
+                    current_time.setMinutes(current_time.getMinutes() + 15);
+                    var time_string = current_time.getHours() + ":" + current_time.getMinutes();
+                    times1_prediction.push(time_string);
+                }
 
-    // setInterval(function() {
-    //     $.ajax({
-    //         url: futureUsageUrl,
-    //         type: "GET",
-    //         success: function(newUsage) {
-    //             // get current time and add 10 seconds
-    //             var date1_prediction = new Date();
-    //             date1_prediction.setSeconds(date1_prediction.getSeconds() + 10);
-    //             var time1_prediction = date1_prediction.getHours() + ":" + date1_prediction.getMinutes() + ":" + date1_prediction.getSeconds();
+                // update the prediction chart
+                chart1_prediction.updateSeries([{
+                    name: 'Power Generation Prediction',
+                    data: predictions
+                }]);
 
-    //             // add the new values to the arrays
-    //             usages1_prediction.push(newUsage);
-    //             times1_prediction.push(time1_prediction);
+                chart1_prediction.updateOptions({
+                    xaxis: {
+                        categories: times1_prediction,
+                        min: 0
+                    }
+                });
+            }
+        });
+    }
 
-    //             // only keep the latest 10 values
-    //             if (usages1_prediction.length > 100) {
-    //                 usages1_prediction = usages1_prediction.slice(usages1_prediction.length - 100);
-    //                 times1_prediction = times1_prediction.slice(times1_prediction.length - 100);
-    //             }
-
-    //             // update  chart
-    //             chart1_prediction.updateSeries([{
-    //                 name: 'Power Usage',
-    //                 data: usages1_prediction
-    //             }]);
-
-    //             chart1_prediction.updateOptions({
-    //                 xaxis: {
-    //                     categories: times1_prediction,
-    //                     min: Math.max(times1_prediction.length - 10, 0),
-    //                 }
-    //             });
-    //         }
-    //     });
-    // }, 1000);
+    // Call the prediction function initially and then every 5 minutes (300000 ms)
+    getPredictionData();
+    setInterval(getPredictionData, 300000);
 });
