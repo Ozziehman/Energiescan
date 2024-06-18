@@ -9,6 +9,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
+from keras.src.legacy.saving import legacy_h5_format
 
 # dir_path = os.path.dirname(os.path.realpath(__file__))
 # print(dir_path)
@@ -18,15 +19,29 @@ chart_data = Blueprint('chart_data', __name__,
     template_folder='templates')
 
 # Global variables for the data
-data_pv = pd.read_csv('core/static/data/2022_15min_data.csv')
+data_pv = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv')
+df_pv = data_pv[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
 data_household_power_consumption = pd.read_csv('core/static/data/household_power_consumption.csv', sep=';', low_memory=False)
 
 # Load the trained LSTM model
-model_pv = load_model('core/static/data/lstm_model_pv.h5')
-model_household = load_model('core/static/data/lstm_model_household.h5')
+model_pv = legacy_h5_format.load_model_from_hdf5('core/static/data/lstm_model_pv.h5', custom_objects={'mae': 'mae'})
+# model_household = legacy_h5_format.load_model_from_hdf5(('core/static/data/lstm_model_household.h5')
 
 # Initialize and fit the scaler on the historical data
 scaler = MinMaxScaler(feature_range=(0, 1))
+
+def create_sequences(data, seq_length, prediction_length):
+    X, y = [], []
+    for i in range(len(data) - seq_length - prediction_length + 1):
+        seq = data[i:(i + seq_length), :]  # All columns for X
+        label = data[(i + seq_length):(i + seq_length + prediction_length), 0]  # First column is the target
+        X.append(seq)
+        y.append(label)
+    arrayX = np.array(X)
+    arrayY = np.array(y)
+    print(f"Shapes: X={arrayX.shape}, y={arrayY.shape}")
+    return arrayX, arrayY
+
 
 @chart_data.route('/get_csv_data_pv', methods=['GET'])
 def get_csv_data_pv():
@@ -64,27 +79,22 @@ def get_pv_prediction():
     # Fetch past & ahead amount
     n_sequence_past = 720
     n_ahead_prediction = 154
-    
+
     # Error handling
-    index = session.get('index_pv', 0)
-    if index + n_sequence_past + n_ahead_prediction > len(data_pv):
+    index = 0
+    if index + n_sequence_past + n_ahead_prediction > len(df_pv):
         return jsonify({'error': 'Not enough data for prediction'})
 
     # Get the required data slice
-    data_slice = data_pv.iloc[index:index + n_sequence_past + n_ahead_prediction]
+    data_slice = df_pv.iloc[index:index + n_sequence_past + n_ahead_prediction].values
 
-    # Preprocess the data slice
-    data_scaled = scaler.transform(data_slice)
-    X_input = data_scaled[:n_sequence_past].reshape(1, n_sequence_past, -1)
+    # Create sequences
+    X, y = create_sequences(data_slice, seq_length=n_sequence_past, prediction_length=n_ahead_prediction)
 
-    # Predict
-    predictions_scaled = model_pv.predict(X_input)
-    
-    # Inverse transform the predictions
-    dummy_features = np.zeros((predictions_scaled.shape[1], data_scaled.shape[1] - 1))
-    predictions_inv = scaler.inverse_transform(np.concatenate((predictions_scaled.reshape(-1, 1), dummy_features), axis=1))[:, 0]
+    # Predict (only take the first prediction for the given range)
+    predictions = model_pv.predict(X)[0]
 
-    return jsonify({'predictions': predictions_inv.tolist()})
+    return jsonify({'predictions': predictions.tolist()})
 
 
 @chart_data.route('/get_household_power_consumption_prediction', methods=['GET'])
