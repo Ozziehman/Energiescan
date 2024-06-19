@@ -9,7 +9,9 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
-from keras.src.legacy.saving import legacy_h5_format
+# from keras.src.legacy.saving import legacy_h5_format
+import pickle
+
 
 # dir_path = os.path.dirname(os.path.realpath(__file__))
 # print(dir_path)
@@ -18,17 +20,22 @@ chart_data = Blueprint('chart_data', __name__,
     static_url_path='/core/static',
     template_folder='templates')
 
-# Global variables for the data
-data_pv = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv')
+# dataframes
+data_pv = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False)
 df_pv = data_pv[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
 data_household_power_consumption = pd.read_csv('core/static/data/household_power_consumption.csv', sep=';', low_memory=False)
 
-# Load the trained LSTM model
-model_pv = legacy_h5_format.load_model_from_hdf5('core/static/data/lstm_model_pv.h5', custom_objects={'mae': 'mae'})
-# model_household = legacy_h5_format.load_model_from_hdf5(('core/static/data/lstm_model_household.h5')
+# load model
+# model_pv = legacy_h5_format.load_model_from_hdf5('core/static/data/lstm_model_pv.h5', custom_objects={'mae': 'mae'})
+with open ('core/static/data/lstm_model_pv.pkl', 'rb') as f:
+    model_pv = pickle.load(f)
+with open('core/static/data/lstm_scaler_pv.pkl', 'rb') as f:
+    scaler_pv = pickle.load(f)
 
-# Initialize and fit the scaler on the historical data
-scaler = MinMaxScaler(feature_range=(0, 1))
+with open ('core/static/data/lstm_model_household.pkl', 'rb') as f:
+    model_household = pickle.load(f)
+with open('core/static/data/lstm_scaler_household.pkl', 'rb') as f:
+    scaler = pickle.load(f)
 
 def create_sequences(data, seq_length, prediction_length):
     X, y = [], []
@@ -105,8 +112,9 @@ def get_csv_data_household_power_consumption():
 
 @chart_data.route('/get_pv_prediction', methods=['GET'])
 def get_pv_prediction():
-    model = load_model('core/static/data/lstm_model_pv.h5', custom_objects={'mae': 'mae'})
-    scaler = MinMaxScaler()
+    # scaler
+    scaler = scaler_pv
+
     train_data = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False)
     train_data = train_data[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
     train_scaled = scaler.fit_transform(train_data)
@@ -115,11 +123,14 @@ def get_pv_prediction():
     new_data = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False).tail(720)
     new_data = new_data[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
     new_data_scaled = scaler.transform(new_data)
+
     X_new = create_new_sequences(new_data_scaled, seq_length)
-    y_new_pred_scaled = model.predict(X_new)
+    #predict
+    y_new_pred_scaled = model_pv.predict(X_new)
     y_new_pred_reshaped = y_new_pred_scaled.reshape(-1, 1)
     dummy_features_new = np.zeros((y_new_pred_reshaped.shape[0], train_scaled.shape[1] - 1))
     y_new_pred_inv = scaler.inverse_transform(np.concatenate((y_new_pred_reshaped, dummy_features_new), axis=1))[:, 0]
+
     return jsonify({'predictions': y_new_pred_inv.tolist()})
 
 @chart_data.route('/get_household_power_consumption_prediction', methods=['GET'])
