@@ -42,7 +42,7 @@ $(document).ready(function() {
 
     setInterval(function() {
         $.ajax({
-            url: getCSVDataUrl,
+            url: '/get_csv_data_pv',
             type: "GET",
             success: function(data) {
                 // get current time

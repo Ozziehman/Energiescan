@@ -22,20 +22,22 @@ chart_data = Blueprint('chart_data', __name__,
 
 # dataframes
 data_pv = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False)
-df_pv = data_pv[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
-data_household_power_consumption = pd.read_csv('core/static/data/household_power_consumption.csv', sep=';', low_memory=False)
+data_household = pd.read_csv('core/static/data/household_power_consumption_processed.csv', sep=';', low_memory=False)
 
-# load model
-# model_pv = legacy_h5_format.load_model_from_hdf5('core/static/data/lstm_model_pv.h5', custom_objects={'mae': 'mae'})
-with open ('core/static/data/lstm_model_pv.pkl', 'rb') as f:
-    model_pv = pickle.load(f)
-with open('core/static/data/lstm_scaler_pv.pkl', 'rb') as f:
-    scaler_pv = pickle.load(f)
+# load lstm models + scalers
+model_pv = load_model('core/static/data/lstm_model_pv.h5')
+scaler_pv = pickle.load(open('core/static/data/lstm_scaler_pv.pkl', 'rb'))
 
-with open ('core/static/data/lstm_model_household.pkl', 'rb') as f:
-    model_household = pickle.load(f)
-with open('core/static/data/lstm_scaler_household.pkl', 'rb') as f:
-    scaler_household = pickle.load(f)
+model_household = load_model('core/static/data/lstm_model_household.h5')
+scaler_household = pickle.load(open('core/static/data/lstm_scaler_household.pkl', 'rb'))
+
+# load gru models + scalers
+model_pv_gru = load_model('core/static/data/gru_model_pv.h5')
+scaler_pv_gru = pickle.load(open('core/static/data/gru_scaler_pv.pkl', 'rb'))
+
+model_household_gru = load_model('core/static/data/gru_model_household.h5')
+scaler_household_gru = pickle.load(open('core/static/data/gru_scaler_household.pkl', 'rb'))
+# please use python 3.10.14 and transformers 2.10.0 for this code to work, the models were made in this for compatibility reasons
 
 def create_sequences(data, seq_length, prediction_length):
     X, y = [], []
@@ -79,46 +81,22 @@ def get_csv_data_household_power_consumption():
     new_index = index + 1
     session['index_houshold_power_consumption'] = new_index
 
-    #print(data_household_power_consumption.iloc[new_index]['Global_active_power'])
-
     return jsonify({
-        'DateTime': data_household_power_consumption.iloc[new_index]['Date'] + " " + data_household_power_consumption.iloc[new_index]['Time'],
-        'Global_active_power': data_household_power_consumption.iloc[new_index]['Global_active_power'],
-        'Global_reactive_power': data_household_power_consumption.iloc[new_index]['Global_reactive_power']
+        'DateTime': data_household.iloc[new_index]['DateTime'],
+        'Global_active_power': data_household.iloc[new_index]['Global_active_power'],
+        'Global_reactive_power': data_household.iloc[new_index]['Global_reactive_power']
     })
     
-    
-# @chart_data.route('/get_pv_prediction', methods=['GET'])
-# def get_pv_prediction():
-#     # Fetch past & ahead amount
-#     n_sequence_past = 720
-#     n_ahead_prediction = 154
-
-#     # Error handling
-#     index = 0
-#     if index + n_sequence_past + n_ahead_prediction > len(df_pv):
-#         return jsonify({'error': 'Not enough data for prediction'})
-
-#     # Get the required data slice
-#     data_slice = df_pv.iloc[index:index + n_sequence_past + n_ahead_prediction].values
-
-#     # Create sequences
-#     X, y = create_sequences(data_slice, seq_length=n_sequence_past, prediction_length=n_ahead_prediction)
-
-#     # Predict (only take the first prediction for the given range)
-#     predictions = model_pv.predict(X)[0]
-
-#     return jsonify({'predictions': predictions.tolist()})
 
 @chart_data.route('/get_pv_prediction', methods=['GET'])
 def get_pv_prediction():
-    train_data_pv = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False)
+    train_data_pv = data_pv
     # Get train data so athe dimension can be used for the new data
     train_data_pv = train_data_pv[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
     train_scaled_pv = scaler_pv.fit_transform(train_data_pv)
     seq_length_pv = 720
     # new_data = the input, SHOULD BE CHANGED TO ACTUAL INPUT or SIMULATED DATA TODO maybe forloop through testset?
-    new_data_pv = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False).tail(720)
+    new_data_pv = data_pv.tail(seq_length_pv) # THIS IS DUMMY INPUT
     new_data_pv = new_data_pv[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
     new_data_scaled_pv = scaler_pv.transform(new_data_pv)
     # split into sequences
@@ -133,13 +111,13 @@ def get_pv_prediction():
 
 @chart_data.route('/get_household_power_consumption_prediction', methods=['GET'])
 def get_household_power_consumption_prediction():
-    train_data_household = pd.read_csv('core/static/data/household_power_consumption_processed.csv', sep=',', low_memory=False)
+    train_data_household = data_household
     # Get train data so athe dimension can be used for the new data
     train_data_household = train_data_household[['Global_active_power', 'Month', 'Day', 'Weekday', 'Hour']]
     train_scaled_household = scaler_household.fit_transform(train_data_household)
     seq_length_household = 720
     # new_data = the input, SHOULD BE CHANGED TO ACTUAL INPUT or SIMULATED DATA TODO maybe forloop through testset?
-    new_data_household = pd.read_csv('core/static/data/household_power_consumption_processed.csv', sep=',', low_memory=False).tail(720)
+    new_data_household = data_household.tail(seq_length_household) # THIS IS DUMMY INPUT
     new_data_household = new_data_household[['Global_active_power', 'Month', 'Day', 'Weekday', 'Hour']]
     new_data_scaled_household = scaler_household.transform(new_data_household)
     # split into sequences
