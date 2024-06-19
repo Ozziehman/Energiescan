@@ -28,7 +28,7 @@ $(document).ready(function() {
 
     setInterval(function() {
         $.ajax({
-            url: getCSVdataHouseholdPowerConsumptionUrl,
+            url: '/get_csv_data_household_power_consumption',
             type: "GET",
             success: function(data) {
                 // get current time
