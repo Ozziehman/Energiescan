@@ -96,7 +96,7 @@ def get_pv_prediction():
     train_scaled_pv = scaler_pv.fit_transform(train_data_pv)
     seq_length_pv = 720
     # new_data = the input, SHOULD BE CHANGED TO ACTUAL INPUT or SIMULATED DATA TODO maybe forloop through testset?
-    new_data_pv = data_pv.tail(720) # THIS IS DUMMY INPUT
+    new_data_pv = data_pv.tail(seq_length_pv) # THIS IS DUMMY INPUT
     new_data_pv = new_data_pv[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
     new_data_scaled_pv = scaler_pv.transform(new_data_pv)
     # split into sequences
@@ -117,7 +117,7 @@ def get_household_power_consumption_prediction():
     train_scaled_household = scaler_household.fit_transform(train_data_household)
     seq_length_household = 720
     # new_data = the input, SHOULD BE CHANGED TO ACTUAL INPUT or SIMULATED DATA TODO maybe forloop through testset?
-    new_data_household = data_household.tail(720) # THIS IS DUMMY INPUT
+    new_data_household = data_household.tail(seq_length_household) # THIS IS DUMMY INPUT
     new_data_household = new_data_household[['Global_active_power', 'Month', 'Day', 'Weekday', 'Hour']]
     new_data_scaled_household = scaler_household.transform(new_data_household)
     # split into sequences

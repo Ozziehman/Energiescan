@@ -17,14 +17,14 @@ def create_new_sequences(data, seq_length):
         X.append(seq)
     return np.array(X)
 
-model_pv = load_model('core/static/data/lstm_model_pv.h5')
-scaler = pickle.load(open('core/static/data/lstm_scaler_pv.pkl', 'rb'))
+model_pv = load_model('core/static/data/gru_model_pv.h5')
+scaler = pickle.load(open('core/static/data/gru_scaler_pv.pkl', 'rb'))
 
 train_data = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False)
 train_data = train_data[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
 train_scaled = scaler.fit_transform(train_data)
 seq_length = 720
-new_data = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False).iloc[1723:2443]
+new_data = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False).tail(720)
 new_data = new_data[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
 new_data_scaled = scaler.transform(new_data)
 X_new = create_new_sequences(new_data_scaled, seq_length)
