@@ -35,7 +35,7 @@ with open('core/static/data/lstm_scaler_pv.pkl', 'rb') as f:
 with open ('core/static/data/lstm_model_household.pkl', 'rb') as f:
     model_household = pickle.load(f)
 with open('core/static/data/lstm_scaler_household.pkl', 'rb') as f:
-    scaler = pickle.load(f)
+    scaler_household = pickle.load(f)
 
 def create_sequences(data, seq_length, prediction_length):
     X, y = [], []
@@ -112,24 +112,21 @@ def get_csv_data_household_power_consumption():
 
 @chart_data.route('/get_pv_prediction', methods=['GET'])
 def get_pv_prediction():
-    # scaler
-    scaler = scaler_pv
-
     train_data = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False)
     train_data = train_data[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
-    train_scaled = scaler.fit_transform(train_data)
+    train_scaled = scaler_pv.fit_transform(train_data)
     seq_length = 720
     # new_data = the input, SHOULD BE CHANGED TO ACTUAL INPUT or SIMULATED DATA TODO maybe forloop through testset?
     new_data = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False).tail(720)
     new_data = new_data[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
-    new_data_scaled = scaler.transform(new_data)
+    new_data_scaled = scaler_pv.transform(new_data)
 
     X_new = create_new_sequences(new_data_scaled, seq_length)
     #predict
     y_new_pred_scaled = model_pv.predict(X_new)
     y_new_pred_reshaped = y_new_pred_scaled.reshape(-1, 1)
     dummy_features_new = np.zeros((y_new_pred_reshaped.shape[0], train_scaled.shape[1] - 1))
-    y_new_pred_inv = scaler.inverse_transform(np.concatenate((y_new_pred_reshaped, dummy_features_new), axis=1))[:, 0]
+    y_new_pred_inv = scaler_pv.inverse_transform(np.concatenate((y_new_pred_reshaped, dummy_features_new), axis=1))[:, 0]
 
     return jsonify({'predictions': y_new_pred_inv.tolist()})
 
