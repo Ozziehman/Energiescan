@@ -112,47 +112,42 @@ def get_csv_data_household_power_consumption():
 
 @chart_data.route('/get_pv_prediction', methods=['GET'])
 def get_pv_prediction():
-    train_data = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False)
-    train_data = train_data[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
-    train_scaled = scaler_pv.fit_transform(train_data)
-    seq_length = 720
+    train_data_pv = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False)
+    # Get train data so athe dimension can be used for the new data
+    train_data_pv = train_data_pv[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
+    train_scaled_pv = scaler_pv.fit_transform(train_data_pv)
+    seq_length_pv = 720
     # new_data = the input, SHOULD BE CHANGED TO ACTUAL INPUT or SIMULATED DATA TODO maybe forloop through testset?
-    new_data = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False).tail(720)
-    new_data = new_data[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
-    new_data_scaled = scaler_pv.transform(new_data)
-
-    X_new = create_new_sequences(new_data_scaled, seq_length)
+    new_data_pv = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False).tail(720)
+    new_data_pv = new_data_pv[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
+    new_data_scaled_pv = scaler_pv.transform(new_data_pv)
+    # split into sequences
+    X_new_pv = create_new_sequences(new_data_scaled_pv, seq_length_pv)
     #predict
-    y_new_pred_scaled = model_pv.predict(X_new)
-    y_new_pred_reshaped = y_new_pred_scaled.reshape(-1, 1)
-    dummy_features_new = np.zeros((y_new_pred_reshaped.shape[0], train_scaled.shape[1] - 1))
-    y_new_pred_inv = scaler_pv.inverse_transform(np.concatenate((y_new_pred_reshaped, dummy_features_new), axis=1))[:, 0]
+    y_new_pred_scaled_pv = model_pv.predict(X_new_pv)
+    y_new_pred_reshaped_pv = y_new_pred_scaled_pv.reshape(-1, 1)
+    dummy_features_new_pv = np.zeros((y_new_pred_reshaped_pv.shape[0], train_scaled_pv.shape[1] - 1))
+    y_new_pred_inv_pv = scaler_pv.inverse_transform(np.concatenate((y_new_pred_reshaped_pv, dummy_features_new_pv), axis=1))[:, 0]
 
-    return jsonify({'predictions': y_new_pred_inv.tolist()})
+    return jsonify({'predictions': y_new_pred_inv_pv.tolist()})
 
 @chart_data.route('/get_household_power_consumption_prediction', methods=['GET'])
 def get_household_power_consumption_prediction():
-    # Fetch past & ahead amount
-    n_sequence_past = 720
-    n_ahead_prediction = 154
-    
-    # Error handling
-    index = session.get('index_household_power_consumption', 0)
-    if index + n_sequence_past + n_ahead_prediction > len(data_household_power_consumption):
-        return jsonify({'error': 'Not enough data for prediction'})
+    train_data_household = pd.read_csv('core/static/data/household_power_consumption_processed.csv', sep=',', low_memory=False)
+    # Get train data so athe dimension can be used for the new data
+    train_data_household = train_data_household[['Global_active_power', 'Month', 'Day', 'Weekday', 'Hour']]
+    train_scaled_household = scaler_household.fit_transform(train_data_household)
+    seq_length_household = 720
+    # new_data = the input, SHOULD BE CHANGED TO ACTUAL INPUT or SIMULATED DATA TODO maybe forloop through testset?
+    new_data_household = pd.read_csv('core/static/data/household_power_consumption_processed.csv', sep=',', low_memory=False).tail(720)
+    new_data_household = new_data_household[['Global_active_power', 'Month', 'Day', 'Weekday', 'Hour']]
+    new_data_scaled_household = scaler_household.transform(new_data_household)
+    # split into sequences
+    X_new_household = create_new_sequences(new_data_scaled_household, seq_length_household)
+    #predict
+    y_new_pred_scaled_household = model_household.predict(X_new_household)
+    y_new_pred_reshaped_household = y_new_pred_scaled_household.reshape(-1, 1)
+    dummy_features_new_household = np.zeros((y_new_pred_reshaped_household.shape[0], train_scaled_household.shape[1] - 1))
+    y_new_pred_inv_household = scaler_household.inverse_transform(np.concatenate((y_new_pred_reshaped_household, dummy_features_new_household), axis=1))[:, 0]
 
-    # Get the required data slice
-    data_slice = data_household_power_consumption.iloc[index:index + n_sequence_past + n_ahead_prediction]
-
-    # Preprocess the data slice
-    data_scaled = scaler.transform(data_slice)
-    X_input = data_scaled[:n_sequence_past].reshape(1, n_sequence_past, -1)
-
-    # Predict
-    predictions_scaled = model_household.predict(X_input)
-    
-    # Inverse transform the predictions
-    dummy_features = np.zeros((predictions_scaled.shape[1], data_scaled.shape[1] - 1))
-    predictions_inv = scaler.inverse_transform(np.concatenate((predictions_scaled.reshape(-1, 1), dummy_features), axis=1))[:, 0]
-
-    return jsonify({'predictions': predictions_inv.tolist()})
+    return jsonify({'predictions': y_new_pred_inv_household.tolist()})
