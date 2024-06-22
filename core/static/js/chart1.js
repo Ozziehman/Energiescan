@@ -1,5 +1,4 @@
 $(document).ready(function() {
-
     // chart1_current
     var options1_current = {
         chart: {
@@ -75,11 +74,12 @@ $(document).ready(function() {
         });
     }, 300);
 
-    // function to get prediction data
-    function getPredictionData() {
+    // Function to get prediction data
+    function getPredictionData(modelType) {
         $.ajax({
             url: '/get_pv_prediction',
             type: 'GET',
+            data: { model: modelType },
             success: function(response) {
                 var predictions = response['predictions'];
 
@@ -88,11 +88,13 @@ $(document).ready(function() {
 
                 for (var i = 0; i < predictions.length; i++) {
                     current_time.setMinutes(current_time.getMinutes() + 15);
-                    var time_string = current_time.getHours() + ":" + current_time.getMinutes();
+                    var hours = current_time.getHours().toString().padStart(2, '0');
+                    var minutes = current_time.getMinutes().toString().padStart(2, '0');
+                    var time_string = hours + ":" + minutes;
                     times1_prediction.push(time_string);
                 }
 
-                // update the prediction chart
+                // Update the prediction chart
                 chart1_prediction.updateSeries([{
                     name: 'Power Generation Prediction',
                     data: predictions
@@ -108,7 +110,19 @@ $(document).ready(function() {
         });
     }
 
-    // Call the prediction function initially and then every 5 minutes (300000 ms)
-    getPredictionData();
-    setInterval(getPredictionData, 300000);
+    var selectedModel = 'lstm'; // Default to lstm
+
+    // Initial call to fetch prediction data with default model type
+    getPredictionData(selectedModel);
+
+    // Update prediction data when the user selects a different model
+    $('#modelSelect').change(function() {
+        selectedModel = $(this).val();
+        getPredictionData(selectedModel);
+    });
+
+    // Update prediction data every 5 minutes
+    setInterval(function() {
+        getPredictionData(selectedModel);
+    }, 300000);
 });

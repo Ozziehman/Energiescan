@@ -1,5 +1,4 @@
 $(document).ready(function() {
-
     // chart2_current
     var options2_current = {
         chart: {
@@ -21,6 +20,24 @@ $(document).ready(function() {
     var chart2_current = new ApexCharts(document.querySelector("#chart2_current"), options2_current);
     chart2_current.render();
 
+    // chart2_prediction
+    var options2_prediction = {
+        chart: {
+            type: 'area'
+        },
+        series: [{
+            name: 'Power Usage Prediction',
+            data: []
+        }],
+        xaxis: {
+            categories: []
+        },
+        colors: ['#FF0000']
+    }
+
+    var chart2_prediction = new ApexCharts(document.querySelector("#chart2_prediction"), options2_prediction);
+    chart2_prediction.render();
+
     // initial data
     var global_active_power2_current = [];
     var global_reactive_power2_current = [];
@@ -32,21 +49,22 @@ $(document).ready(function() {
             type: "GET",
             success: function(data) {
                 // get current time
-                data2_dateTime = data['DateTime'];
-                data2_globalActivePower = data['Global_active_power'];
-                data2_globalReactivePower = data['Global_reactive_power'];
+                var data2_dateTime = data['DateTime'];
+                var data2_globalActivePower = data['Global_active_power'];
+                var data2_globalReactivePower = data['Global_reactive_power'];
+
                 // add the new values to the arrays
                 global_active_power2_current.push(data2_globalActivePower);
                 times2_current.push(data2_dateTime);
                 global_reactive_power2_current.push(data2_globalReactivePower);
-    
+
                 // only keep the latest 100 values
                 if (global_active_power2_current.length > 100) {
                     global_active_power2_current = global_active_power2_current.slice(global_active_power2_current.length - 100);
                     times2_current = times2_current.slice(times2_current.length - 100);
                     global_reactive_power2_current = global_reactive_power2_current.slice(global_reactive_power2_current.length - 100);
                 }
-    
+
                 // update the chart
                 chart2_current.updateSeries([{
                     name: 'Active Power Usage',
@@ -55,7 +73,7 @@ $(document).ready(function() {
                     name: 'Reactive Power Usage',
                     data: global_reactive_power2_current
                 }]);
-    
+
                 chart2_current.updateOptions({
                     xaxis: {
                         categories: times2_current,
@@ -66,61 +84,55 @@ $(document).ready(function() {
         });
     }, 300);
 
-//     // chart2_prediction
-//     var options2_prediction = {
-//         chart: {
-//             type: 'area'
-//         },
-//         series: [{
-//             name: 'Power Usage',
-//             data: []
-//         }],
-//         xaxis: {
-//             categories: []
-//         },
-//         colors: ['#FF0000']
-//     }
+    // Function to get prediction data
+    function getPredictionData(modelType) {
+        $.ajax({
+            url: '/get_household_power_consumption_prediction',
+            type: 'GET',
+            data: { model: modelType },
+            success: function(response) {
+                var predictions = response['predictions'];
 
-//     var chart2_prediction = new ApexCharts(document.querySelector("#chart2_prediction"), options2_prediction);
-//     chart2_prediction.render();
+                var current_time = new Date();
+                var times2_prediction = [];
 
-//     // initial data
-//     var usages2_prediction = [];
-//     var times2_prediction = [];
+                for (var i = 0; i < predictions.length; i++) {
+                    current_time.setMinutes(current_time.getMinutes() + 15);
+                    var hours = current_time.getHours().toString().padStart(2, '0');
+                    var minutes = current_time.getMinutes().toString().padStart(2, '0');
+                    var time_string = hours + ":" + minutes;
+                    times2_prediction.push(time_string);
+                }
 
-//     setInterval(function() {
-//         $.ajax({
-//             url: futureUsageUrl,
-//             type: "GET",
-//             success: function(newUsage) {
-//                 // get current time and add 10 seconds
-//                 var date2_prediction = new Date();
-//                 date2_prediction.setSeconds(date2_prediction.getSeconds() + 10);
-//                 var time2_prediction = date2_prediction.getHours() + ":" + date2_prediction.getMinutes() + ":" + date2_prediction.getSeconds();
+                // Update the prediction chart
+                chart2_prediction.updateSeries([{
+                    name: 'Power Usage Prediction',
+                    data: predictions
+                }]);
 
-//                 // add the new values to the arrays
-//                 usages2_prediction.push(newUsage);
-//                 times2_prediction.push(time2_prediction);
+                chart2_prediction.updateOptions({
+                    xaxis: {
+                        categories: times2_prediction,
+                        min: 0
+                    }
+                });
+            }
+        });
+    }
 
-//                 // only keep the latest 10 values
-//                 if (usages2_prediction.length > 100) {
-//                     usages2_prediction = usages2_prediction.slice(usages2_prediction.length - 100);
-//                     times2_prediction = times2_prediction.slice(times2_prediction.length - 100);
-//                 }
+    var selectedModel = 'lstm'; // Default to lstm
 
-//                 // update the chart
-//                 chart2_prediction.updateSeries([{
-//                     name: 'Power Usage',
-//                     data: usages2_prediction
-//                 }]);
+    // Initial call to fetch prediction data with default model type
+    getPredictionData(selectedModel);
 
-//                 chart2_prediction.updateOptions({
-//                     xaxis: {
-//                         categories: times2_prediction,
-//                         min: Math.max(times2_prediction.length - 10, 0),
-//                     }
-//                 });
-//             }
-//         });
-//     }, 1000);
+    // Update prediction data when the user selects a different model
+    $('#modelSelect').change(function() {
+        selectedModel = $(this).val();
+        getPredictionData(selectedModel);
+    });
+
+    // Update prediction data every 5 minutes
+    setInterval(function() {
+        getPredictionData(selectedModel);
+    }, 300000);
 });
