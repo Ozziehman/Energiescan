@@ -22,7 +22,7 @@ chart_data = Blueprint('chart_data', __name__,
 
 # Dataframes
 data_pv = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False)
-data_household = pd.read_csv('core/static/data/household_power_consumption_processed.csv', sep=';', low_memory=False)
+data_household = pd.read_csv('core/static/data/household_power_consumption_processed.csv', sep=',', low_memory=False)
 
 # Load the pre-trained LSTM models and the Scalers
 model_pv_lstm = load_model('core/static/data/lstm_model_pv.h5')
@@ -31,7 +31,7 @@ scaler_pv_lstm = pickle.load(open('core/static/data/lstm_scaler_pv.pkl', 'rb'))
 model_household_lstm = load_model('core/static/data/lstm_model_household.h5')
 scaler_household_lstm = pickle.load(open('core/static/data/lstm_scaler_household.pkl', 'rb'))
 
-# load the pre-trained GRU models and the Scalers
+# Load the pre-trained GRU models and the Scalers
 model_pv_gru = load_model('core/static/data/gru_model_pv.h5')
 scaler_pv_gru = pickle.load(open('core/static/data/gru_scaler_pv.pkl', 'rb'))
 
@@ -80,9 +80,11 @@ def get_csv_data_household_power_consumption():
 
     new_index = index + 1
     session['index_houshold_power_consumption'] = new_index
+    
+    data_household['DateTime'] = pd.to_datetime(data_household[['Year', 'Month', 'Day', 'Hour', 'Minute']])
 
     return jsonify({
-        'DateTime': data_household.iloc[new_index]['Minute'], # this shouldnt be minute just didnt find a way to put it back to datetime
+        'DateTime': data_household.iloc[new_index]['DateTime'],
         'Global_active_power': data_household.iloc[new_index]['Global_active_power'],
         'Global_reactive_power': data_household.iloc[new_index]['Global_reactive_power']
     })
@@ -133,20 +135,20 @@ def get_household_power_consumption_prediction():
     
     train_data_household = data_household
     
-    # Get train data so athe dimension can be used for the new data
-    train_data_household = train_data_household[['Global_active_power', 'Month', 'Day', 'Weekday', 'Hour']]
+    # Get train data so the dimension can be used for the new data
+    train_data_household = train_data_household[['Global_active_power', 'Month', 'Day', 'Weekday', 'Hour', 'Minute']]
     train_scaled_household = scaler_household.fit_transform(train_data_household)
     seq_length_household = 720
     
     # new_data = the input, SHOULD BE CHANGED TO ACTUAL INPUT or SIMULATED DATA TODO maybe forloop through testset?
     new_data_household = data_household.tail(720) # THIS IS DUMMY INPUT
-    new_data_household = new_data_household[['Global_active_power', 'Month', 'Day', 'Weekday', 'Hour']]
+    new_data_household = new_data_household[['Global_active_power', 'Month', 'Day', 'Weekday', 'Hour', 'Minute']]
     new_data_scaled_household = scaler_household.transform(new_data_household)
     
     # Split into sequences
     X_new_household = create_new_sequences(new_data_scaled_household, seq_length_household)
     
-    #predict
+    # Predict
     y_new_pred_scaled_household = model_household.predict(X_new_household)
     y_new_pred_reshaped_household = y_new_pred_scaled_household.reshape(-1, 1)
     dummy_features_new_household = np.zeros((y_new_pred_reshaped_household.shape[0], train_scaled_household.shape[1] - 1))

@@ -126,7 +126,7 @@ $(document).ready(function() {
     getPredictionData(selectedModel);
 
     // Update prediction data when the user selects a different model
-    $('#modelSelect').change(function() {
+    $('#modelSelect2').change(function() {
         selectedModel = $(this).val();
         getPredictionData(selectedModel);
     });
