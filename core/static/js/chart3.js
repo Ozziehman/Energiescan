@@ -12,7 +12,10 @@ $(document).ready(function() {
         xaxis: {
             categories: []
         },
-        colors: ['#00FF00']
+        colors: ['#00FF00'],
+        dataLabels: {
+            enabled: false
+        }
     }
 
     var chart3_current = new ApexCharts(document.querySelector("#chart3_current"), options3_current);
@@ -69,7 +72,10 @@ $(document).ready(function() {
         xaxis: {
             categories: []
         },
-        colors: ['#FF0000']
+        colors: ['#FF0000'],
+        dataLabels: {
+            enabled: false
+        }
     }
 
     var chart3_prediction = new ApexCharts(document.querySelector("#chart3_prediction"), options3_prediction);
