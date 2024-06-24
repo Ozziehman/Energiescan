@@ -51,7 +51,7 @@ $(document).ready(function() {
                 // get current time
                 var data2_dateTime = data['DateTime'];
                 var data2_globalActivePower = data['Global_active_power'];
-                var data2_globalReactivePower = data['Global_reactive_power'];
+                var data2_globalReactivePower = data['Global_reactive_power']; //This is just for demonstration of the graph!!!!!!!!!!!!!!!!!!
 
                 // add the new values to the arrays
                 global_active_power2_current.push(data2_globalActivePower);
