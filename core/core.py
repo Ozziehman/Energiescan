@@ -17,7 +17,7 @@ core = Blueprint('core', __name__,
 
 @core.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('charts_simple.html')
 
 @core.route('/dummy_button_press', methods=['POST'])
 def dummy_action():
