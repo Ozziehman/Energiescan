@@ -78,7 +78,7 @@ $(document).ready(function() {
                 });
             }
         });
-    }, 300);
+    }, 1000);
 
     // Function to get prediction data
     function getPredictionData(modelType) {
