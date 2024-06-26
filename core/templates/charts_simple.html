@@ -9,50 +9,42 @@ Charts test
 {% endblock %}
 
 {% block content %}
-    <div class="container">
-        <!--Chart1-->
-        <div style="display: flex; flex-wrap: wrap;">
-            <div style="flex: 1 0 100%;">
-                <p>PV Productie</p>
-                <div id="chart1_current" style="width: 100%; height: 400px;"></div>
-            </div>
-            <div style="flex: 1 0 100%;">
-                <p>PV productie voorspelling</p>
-                <div id="chart1_prediction" style="width: 100%; height: 400px;"></div>
-            </div>
-            <select id="modelSelect">
-                <option value="lstm">LSTM</option>
-                <option value="gru">GRU</option>
-            </select>
+<div class="container" style="margin: 100px;">
+
+    <!-- Chart 1: PV Productie -->
+    <select id="modelSelect">
+        <option value="lstm">LSTM</option>
+        <option value="gru">GRU</option>
+    </select>
+    <div style="display: flex; flex-wrap: wrap;">
+        <div class="col" style="flex: 1 0 50%;">
+            <p>PV Productie</p>
+            <div id="chart1_current"></div>
         </div>
-    </br>
-        <!--Chart2-->
-        <div style="display: flex; flex-wrap: wrap;">
-            <div style="flex: 1 0 100%;">
-                <p>Household power consumption</p>
-                <div id="chart2_current" style="width: 100%; height: 400px;"></div>
-            </div>
-            <div style="flex: 1 0 100%;">
-                <p>Household power consumption voorspelling</p>
-                <div id="chart2_prediction" style="width: 100%; height: 400px;"></div>
-            </div>
-            <select id="modelSelect2">
-                <option value="lstm">LSTM</option>
-                <option value="gru">GRU</option>
-            </select>
+        <div class="col" style="flex: 1 0 50%;">
+            <p>PV Productie Voorspelling</p>
+            <div id="chart1_prediction"></div>
         </div>
-        <!--Chart3-->
-        <!-- <div style="display: flex; flex-wrap: wrap;">
-            <div style="flex: 1 0 100%;">
-                <p>Current 3</p>
-                <div id="chart3_current" style="width: 100%; height: 400px;"></div>
-            </div>
-            <div style="flex: 1 0 100%;">
-                <p>Prediction 3</p>
-                <div id="chart3_prediction" style="width: 100%; height: 400px;"></div>
-            </div>
-        </div> -->
     </div>
+
+    <br/>
+
+    <!-- Chart 2: Household Power Consumption -->
+    <select id="modelSelect2">
+        <option value="lstm">LSTM</option>
+        <option value="gru">GRU</option>
+    </select>
+    <div style="display: flex; flex-wrap: wrap;">
+        <div class="col" style="flex: 1 0 50%;">
+            <p>Household Power Consumption</p>
+            <div id="chart2_current"></div>
+        </div>
+        <div class="col" style="flex: 1 0 50%;">
+            <p>Household Power Consumption Voorspelling</p>
+            <div id="chart2_prediction"></div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 
@@ -61,5 +53,4 @@ Charts test
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script src="/core/static/js/chart1.js"></script>
 <script src="/core/static/js/chart2.js"></script>
-<!-- <script src="/core/static/js/chart3.js"></script> -->
 {% endblock %}

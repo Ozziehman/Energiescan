@@ -14,7 +14,10 @@ $(document).ready(function() {
         xaxis: {
             categories: []
         },
-        colors: ['#0000FF', '#FF0000']
+        colors: ['#0000FF', '#FF0000'],
+        dataLabels: {
+            enabled: false
+        }
     }
 
     var chart2_current = new ApexCharts(document.querySelector("#chart2_current"), options2_current);
@@ -32,7 +35,11 @@ $(document).ready(function() {
         xaxis: {
             categories: []
         },
-        colors: ['#FF0000']
+        colors: ['#FF0000'],
+        dataLabels: {
+            enabled: false
+        }
+
     }
 
     var chart2_prediction = new ApexCharts(document.querySelector("#chart2_prediction"), options2_prediction);
@@ -51,7 +58,7 @@ $(document).ready(function() {
                 // get current time
                 var data2_dateTime = data['DateTime'];
                 var data2_globalActivePower = data['Global_active_power'];
-                var data2_globalReactivePower = data['Global_reactive_power'];
+                var data2_globalReactivePower = data['Global_reactive_power']; //This is just for demonstration of the graph!!!!!!!!!!!!!!!!!!
 
                 // add the new values to the arrays
                 global_active_power2_current.push(data2_globalActivePower);
@@ -82,7 +89,7 @@ $(document).ready(function() {
                 });
             }
         });
-    }, 300);
+    }, 1000);
 
     // Function to get prediction data
     function getPredictionData(modelType) {
