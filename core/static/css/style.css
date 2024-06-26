@@ -1,0 +1,23 @@
+#modelSelect,
+#modelSelect2 {
+    font-size: 16px;
+    padding: 5px;
+    border-radius: 10px;
+    margin-bottom: 5%;
+    transition: background-color 0.3s ease, scaleX 0.3s ease;
+  }
+
+  #modelSelect:hover,
+  #modelSelect2:hover {
+    background-color: #f4f4f4;
+    transform: scaleX(1.02);
+    cursor: pointer;
+    box-shadow: 0px 0;
+  }
+
+p {
+    font-size: 20px;
+    text-shadow: 1px 1px 1px #6e565a;
+    margin-top: 5%;
+    text-transform: uppercase;
+}
