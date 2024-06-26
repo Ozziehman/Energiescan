@@ -12,7 +12,7 @@ get larger csv from OSF and put in `core/static/data`
 
 # Om het programma goed te draaien gebruik aub de volgende kernel setup binnen anaconda (https://www.anaconda.com/)
 
-`conda create --name tensorflowgpu python==3.10`
+`conda create --name tensorflowgpu python==3.10.14`
 
 `conda activate tensorflowgpu`
 
