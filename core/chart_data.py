@@ -70,13 +70,14 @@ def get_csv_data_pv():
     # print(data.iloc[new_index]['PV Productie (W)'])
 
     return jsonify({
-        'Time': data_pv.iloc[new_index]['DateTime'],
-        'PV Productie (W)': data_pv.iloc[new_index]['PV Productie (W)']
+        'Time': data_pv.iloc[current_index]['DateTime'],
+        'PV Productie (W)': data_pv.iloc[current_index]['PV Productie (W)']
     })
 
 @chart_data.route('/get_csv_data_household_power_consumption', methods=['GET'])
 def get_csv_data_household_power_consumption():
-    index = session.get('index_houshold_power_consumption', 0)
+    index = session.get(
+        'index_houshold_power_consumption', 0)
 
     new_index = index + 1
     session['index_houshold_power_consumption'] = new_index
@@ -89,8 +90,12 @@ def get_csv_data_household_power_consumption():
         'Global_reactive_power': data_household.iloc[new_index]['Global_reactive_power']
     })
     
+current_index = None
+
 @chart_data.route('/get_pv_prediction', methods=['GET'])
 def get_pv_prediction():
+    global current_index
+
     model_type = request.args.get('model', default='lstm', type=str).lower()
     
     if model_type == 'gru':
@@ -105,10 +110,21 @@ def get_pv_prediction():
     train_scaled_pv = scaler_pv.fit_transform(train_data_pv)
     seq_length_pv = 720
     
-    # new_data = the input, SHOULD BE CHANGED TO ACTUAL INPUT or SIMULATED DATA TODO maybe forloop through testset?
-    new_data_pv = data_pv.tail(720) # THIS IS DUMMY INPUT
+    # Determine the starting index for the sliding window
+    if current_index is None:
+        current_index = int(len(data_pv) * 0.7)  # Start from the last 30% of the dataset
+    
+    # Ensure the sliding window doesn't go out of bounds
+    if current_index + seq_length_pv > len(data_pv):
+        current_index = int(len(data_pv) * 0.7)  # Reset to the start of the last 30% if out of bounds
+    
+    # Get the new data for prediction using the sliding window
+    new_data_pv = data_pv.iloc[current_index:current_index + seq_length_pv]
     new_data_pv = new_data_pv[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
     new_data_scaled_pv = scaler_pv.transform(new_data_pv)
+    
+    # Update the current index for the next call
+    current_index += 1
     
     # Split into sequences
     X_new_pv = create_new_sequences(new_data_scaled_pv, seq_length_pv)

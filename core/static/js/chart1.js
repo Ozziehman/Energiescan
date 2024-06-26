@@ -130,5 +130,5 @@ $(document).ready(function() {
     // Update prediction data every 5 minutes
     setInterval(function() {
         getPredictionData(selectedModel);
-    }, 300000);
+    }, 1000);
 });
