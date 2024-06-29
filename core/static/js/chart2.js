@@ -7,9 +7,6 @@ $(document).ready(function() {
         series: [{
             name: 'Active Power Usage',
             data: []
-        }, {
-            name: 'Reactive Power Usage',
-            data: []
         }],
         xaxis: {
             categories: []
@@ -47,7 +44,6 @@ $(document).ready(function() {
 
     // initial data
     var global_active_power2_current = [];
-    var global_reactive_power2_current = [];
     var times2_current = [];
 
     setInterval(function() {
@@ -58,38 +54,32 @@ $(document).ready(function() {
                 // get current time
                 var data2_dateTime = data['DateTime'];
                 var data2_globalActivePower = data['Global_active_power'];
-                var data2_globalReactivePower = data['Global_reactive_power']; //This is just for demonstration of the graph!!!!!!!!!!!!!!!!!!
 
                 // add the new values to the arrays
                 global_active_power2_current.push(data2_globalActivePower);
                 times2_current.push(data2_dateTime);
-                global_reactive_power2_current.push(data2_globalReactivePower);
 
                 // only keep the latest 100 values
                 if (global_active_power2_current.length > 100) {
                     global_active_power2_current = global_active_power2_current.slice(global_active_power2_current.length - 100);
                     times2_current = times2_current.slice(times2_current.length - 100);
-                    global_reactive_power2_current = global_reactive_power2_current.slice(global_reactive_power2_current.length - 100);
                 }
 
                 // update the chart
                 chart2_current.updateSeries([{
                     name: 'Active Power Usage',
                     data: global_active_power2_current
-                }, {
-                    name: 'Reactive Power Usage',
-                    data: global_reactive_power2_current
                 }]);
 
                 chart2_current.updateOptions({
                     xaxis: {
                         categories: times2_current,
-                        min: Math.max(times2_current.length - 10, 0),
+                        min: 0,
                     }
                 });
             }
         });
-    }, 1000);
+    }, 25000);
 
     // Function to get prediction data
     function getPredictionData(modelType) {
@@ -100,14 +90,24 @@ $(document).ready(function() {
             success: function(response) {
                 var predictions = response['predictions'];
 
-                var current_time = new Date();
+                // Get the last real data time
+                var last_real_time_str2 = times2_current[times2_current.length - 1];
+    
+                // Parse the last real time string into a Date object
+                var last_real_time2 = new Date(last_real_time_str2.replace(' ', 'T') + 'Z'); // Adding 'Z' to indicate UTC time
+    
                 var times2_prediction = [];
-
+    
+                // Start the prediction times 15 minutes after the last real time
                 for (var i = 0; i < predictions.length; i++) {
-                    current_time.setMinutes(current_time.getMinutes() + 15);
-                    var hours = current_time.getHours().toString().padStart(2, '0');
-                    var minutes = current_time.getMinutes().toString().padStart(2, '0');
-                    var time_string = hours + ":" + minutes;
+                    last_real_time2.setMinutes(last_real_time2.getMinutes() + 15);
+                    var year = last_real_time2.getUTCFullYear();
+                    var month = (last_real_time2.getUTCMonth() + 1).toString().padStart(2, '0');
+                    var day = last_real_time2.getUTCDate().toString().padStart(2, '0');
+                    var hours = last_real_time2.getUTCHours().toString().padStart(2, '0');
+                    var minutes = last_real_time2.getUTCMinutes().toString().padStart(2, '0');
+                    var seconds = last_real_time2.getUTCSeconds().toString().padStart(2, '0');
+                    var time_string = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
                     times2_prediction.push(time_string);
                 }
 
@@ -141,5 +141,5 @@ $(document).ready(function() {
     // Update prediction data every 5 minutes
     setInterval(function() {
         getPredictionData(selectedModel);
-    }, 300000);
+    }, 25000);
 });

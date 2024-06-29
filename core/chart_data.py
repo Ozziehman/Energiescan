@@ -22,7 +22,7 @@ chart_data = Blueprint('chart_data', __name__,
 
 # Dataframes
 data_pv = pd.read_csv('core/static/data/2022_15min_data_with_GHI.csv', sep=',', low_memory=False)
-data_household = pd.read_csv('core/static/data/household_power_consumption_processed.csv', sep=',', low_memory=False)
+data_household = pd.read_csv('core/static/data/household_power_consumption_processed_15min.csv', sep=',', low_memory=False)
 
 # Load the pre-trained LSTM models and the Scalers
 model_pv_lstm = load_model('core/static/data/lstm_model_pv.h5')
@@ -76,16 +76,16 @@ def get_csv_data_pv():
 
 @chart_data.route('/get_csv_data_household_power_consumption', methods=['GET'])
 def get_csv_data_household_power_consumption():
-    index = session.get(
-        'index_houshold_power_consumption', 0)
+    index = session.get('index_household_power_consumption', 0)
 
     new_index = index + 1
-    session['index_houshold_power_consumption'] = new_index
+    session['index_household_power_consumption'] = new_index
     
     data_household['DateTime'] = pd.to_datetime(data_household[['Year', 'Month', 'Day', 'Hour', 'Minute']])
+    formatted_datetime = data_household.iloc[new_index]['DateTime'].strftime('%Y-%m-%d %H:%M:%S')
 
     return jsonify({
-        'DateTime': data_household.iloc[new_index]['DateTime'],
+        'DateTime': formatted_datetime,
         'Global_active_power': data_household.iloc[new_index]['Global_active_power'],
         'Global_reactive_power': data_household.iloc[new_index]['Global_reactive_power']
     })
@@ -143,34 +143,49 @@ def get_pv_prediction():
 
 @chart_data.route('/get_household_power_consumption_prediction', methods=['GET'])
 def get_household_power_consumption_prediction():
-    model_type = request.args.get('model', default='lstm', type=str).lower()
-    
-    if model_type == 'gru':
-        model_household = model_household_gru
-        scaler_household = scaler_household_gru
-    else:
-        model_household = model_household_lstm
-        scaler_household = scaler_household_lstm
-    
-    train_data_household = data_household
-    
-    # Get train data so the dimension can be used for the new data
-    train_data_household = train_data_household[['Global_active_power', 'Month', 'Day', 'Weekday', 'Hour', 'Minute']]
-    train_scaled_household = scaler_household.fit_transform(train_data_household)
-    seq_length_household = 720
-    
-    # new_data = the input, SHOULD BE CHANGED TO ACTUAL INPUT or SIMULATED DATA TODO maybe forloop through testset?
-    new_data_household = data_household.tail(720) # THIS IS DUMMY INPUT
-    new_data_household = new_data_household[['Global_active_power', 'Month', 'Day', 'Weekday', 'Hour', 'Minute']]
-    new_data_scaled_household = scaler_household.transform(new_data_household)
-    
-    # Split into sequences
-    X_new_household = create_new_sequences(new_data_scaled_household, seq_length_household)
-    
-    # Predict
-    y_new_pred_scaled_household = model_household.predict(X_new_household)
-    y_new_pred_reshaped_household = y_new_pred_scaled_household.reshape(-1, 1)
-    dummy_features_new_household = np.zeros((y_new_pred_reshaped_household.shape[0], train_scaled_household.shape[1] - 1))
-    y_new_pred_inv_household = scaler_household.inverse_transform(np.concatenate((y_new_pred_reshaped_household, dummy_features_new_household), axis=1))[:, 0]
+    global current_index
 
-    return jsonify({'predictions': y_new_pred_inv_household.tolist()})
+    model_type = request.args.get('model', default='lstm', type=str).lower()
+    seq_length_household = 720
+
+    current_index = current_index if current_index is not None else int(len(data_household) * 0.7)
+    if current_index + seq_length_household > len(data_household):
+        current_index = int(len(data_household) * 0.7)
+
+    # Get train data so the dimension can be used for the new data
+    train_data_household = data_household[['Global_active_power', 'Month', 'Day', 'Weekday', 'Hour', 'Minute']]
+    train_scaled_household_gru = scaler_household_gru.fit_transform(train_data_household)
+    train_scaled_household_lstm = scaler_household_lstm.fit_transform(train_data_household)
+
+    # Get the new data for prediction using the sliding window
+    new_data_household = data_household.iloc[current_index:current_index + seq_length_household]
+    new_data_household = new_data_household[['Global_active_power', 'Month', 'Day', 'Weekday', 'Hour', 'Minute']]
+    new_data_scaled_household_gru = scaler_household_gru.transform(new_data_household)
+    new_data_scaled_household_lstm = scaler_household_lstm.transform(new_data_household)
+    current_index += 1
+
+    # Split into sequences
+    X_new_household_gru = create_new_sequences(new_data_scaled_household_gru, seq_length_household)
+    X_new_household_lstm = create_new_sequences(new_data_scaled_household_lstm, seq_length_household)
+
+    # Predict
+    y_new_pred_scaled_household_gru = model_household_gru.predict(X_new_household_gru)
+    y_new_pred_reshaped_household_gru = y_new_pred_scaled_household_gru.reshape(-1, 1)
+    y_new_pred_scaled_household_lstm = model_household_lstm.predict(X_new_household_lstm)
+    y_new_pred_reshaped_household_lstm = y_new_pred_scaled_household_lstm.reshape(-1, 1)
+
+    dummy_features_new_household_gru = np.zeros((y_new_pred_reshaped_household_gru.shape[0], train_scaled_household_gru.shape[1] - 1))
+    y_new_pred_inv_household_gru = scaler_household_gru.inverse_transform(np.concatenate((y_new_pred_reshaped_household_gru, dummy_features_new_household_gru), axis=1))[:, 0]
+    dummy_features_new_household_lstm = np.zeros((y_new_pred_reshaped_household_lstm.shape[0], train_scaled_household_lstm.shape[1] - 1))
+    y_new_pred_inv_household_lstm = scaler_household_lstm.inverse_transform(np.concatenate((y_new_pred_reshaped_household_lstm, dummy_features_new_household_lstm), axis=1))[:, 0]
+
+    # Compute the average of the predictions from both models
+    y_new_pred_avg = (y_new_pred_inv_household_gru + y_new_pred_inv_household_lstm) / 2
+
+    # Return the predictions as a JSON response
+    if model_type == 'gru':
+        return jsonify({'predictions': y_new_pred_inv_household_gru.tolist()})
+    if model_type == 'lstm':
+        return jsonify({'predictions': y_new_pred_inv_household_lstm.tolist()})
+    if model_type == 'ensemble':
+        return jsonify({'predictions': y_new_pred_avg.tolist()})
