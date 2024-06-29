@@ -11,7 +11,7 @@ $(document).ready(function() {
         xaxis: {
             categories: []
         },
-        colors: ['#0000FF', '#FF0000'],
+        colors: ['#0000FF'],
         dataLabels: {
             enabled: false
         }
@@ -79,7 +79,7 @@ $(document).ready(function() {
                 });
             }
         });
-    }, 10000);
+    }, 1000);
 
     function getPredictionData(modelType) {
         $.ajax({
@@ -140,5 +140,5 @@ $(document).ready(function() {
     // uspdate prediction data every 5 minutes
     setInterval(function() {
         getPredictionData(selectedModel);
-    }, 10000);
+    }, 1000);
 });

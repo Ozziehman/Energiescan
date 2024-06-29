@@ -38,6 +38,10 @@ scaler_pv_gru = pickle.load(open('core/static/data/gru_scaler_pv.pkl', 'rb'))
 
 model_household_gru = load_model('core/static/data/gru_model_household.h5')
 scaler_household_gru = pickle.load(open('core/static/data/gru_scaler_household.pkl', 'rb'))
+
+current_index_pv = 0
+current_index_household = 0
+
 # NOTE: Please use python 3.10.14 and transformers 2.10.0 for this code to work, the models were made in this for compatibility reasons
 
 def create_sequences(data, seq_length, prediction_length):
@@ -62,32 +66,31 @@ def create_new_sequences(data, seq_length):
 
 @chart_data.route('/get_csv_data_pv', methods=['GET'])
 def get_csv_data_pv():
-    current_index_pv = session.get('index_pv', 0)
-
     new_index_pv = current_index_pv + 1
     session['index_pv'] = new_index_pv
 
+    datetime = data_pv.iloc[new_index_pv]['DateTime']
+    PV_productie = data_pv.iloc[new_index_pv]['PV Productie (W)']
+    print(session['index_pv'])
+
     return jsonify({
-        'DateTime': data_pv.iloc[new_index_pv]['DateTime'],
-        'PV Productie (W)': data_pv.iloc[new_index_pv]['PV Productie (W)']
+        'DateTime': datetime,
+        'PV Productie (W)': PV_productie,
     })
 
 @chart_data.route('/get_csv_data_household_power_consumption', methods=['GET'])
 def get_csv_data_household_power_consumption():
-    current_index_household = session.get('index_household_power_consumption', 0)
-
     new_index_household = current_index_household + 1
     session['index_household_power_consumption'] = new_index_household
     
     formatted_datetime = data_household.iloc[new_index_household]['FormattedDateTime']
+    global_active_power = data_household.iloc[new_index_household]['Global_active_power']
 
     return jsonify({
         'DateTime': formatted_datetime,
-        'Global_active_power': data_household.iloc[new_index_household]['Global_active_power'],
+        'Global_active_power': global_active_power
     })
-    
-current_index_pv = None
-current_index_household = None
+
 
 @chart_data.route('/get_pv_prediction', methods=['GET'])
 def get_pv_prediction():
