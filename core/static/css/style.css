@@ -1,9 +1,8 @@
 #modelSelect,
 #modelSelect2 {
     font-size: 16px;
-    padding: 5px;
     border-radius: 10px;
-    margin-bottom: 5%;
+    margin-bottom: 10px;
     transition: background-color 0.3s ease, scaleX 0.3s ease;
   }
 
@@ -16,8 +15,9 @@
   }
 
 p {
-    font-size: 20px;
+    font: 30px/1.5 'Open Sans', sans-serif;
+    font-style: bold;
     text-shadow: 1px 1px 1px #6e565a;
-    margin-top: 5%;
+    margin-top: 10px;
     text-transform: uppercase;
 }

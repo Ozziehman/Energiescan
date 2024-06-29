@@ -59,10 +59,10 @@ $(document).ready(function() {
                 global_active_power2_current.push(data2_globalActivePower);
                 times2_current.push(data2_dateTime);
 
-                // only keep the latest 100 values
-                if (global_active_power2_current.length > 100) {
-                    global_active_power2_current = global_active_power2_current.slice(global_active_power2_current.length - 100);
-                    times2_current = times2_current.slice(times2_current.length - 100);
+                // only keep the latest 50 values
+                if (global_active_power2_current.length > 50) {
+                    global_active_power2_current = global_active_power2_current.slice(global_active_power2_current.length - 50);
+                    times2_current = times2_current.slice(times2_current.length - 50);
                 }
 
                 // update the chart
@@ -79,9 +79,8 @@ $(document).ready(function() {
                 });
             }
         });
-    }, 25000);
+    }, 10000);
 
-    // Function to get prediction data
     function getPredictionData(modelType) {
         $.ajax({
             url: '/get_household_power_consumption_prediction',
@@ -90,15 +89,15 @@ $(document).ready(function() {
             success: function(response) {
                 var predictions = response['predictions'];
 
-                // Get the last real data time
+                // get the last real data time
                 var last_real_time_str2 = times2_current[times2_current.length - 1];
     
-                // Parse the last real time string into a Date object
-                var last_real_time2 = new Date(last_real_time_str2.replace(' ', 'T') + 'Z'); // Adding 'Z' to indicate UTC time
+                // parse the last real time string into a Date object
+                var last_real_time2 = new Date(last_real_time_str2.replace(' ', 'T') + 'Z'); // Z for UTC time
     
                 var times2_prediction = [];
     
-                // Start the prediction times 15 minutes after the last real time
+                // start the prediction times 15 minutes after the last real time
                 for (var i = 0; i < predictions.length; i++) {
                     last_real_time2.setMinutes(last_real_time2.getMinutes() + 15);
                     var year = last_real_time2.getUTCFullYear();
@@ -111,7 +110,7 @@ $(document).ready(function() {
                     times2_prediction.push(time_string);
                 }
 
-                // Update the prediction chart
+                // update the prediction chart
                 chart2_prediction.updateSeries([{
                     name: 'Power Usage Prediction',
                     data: predictions
@@ -129,17 +128,17 @@ $(document).ready(function() {
 
     var selectedModel = 'lstm'; // Default to lstm
 
-    // Initial call to fetch prediction data with default model type
+    // initial call to fetch prediction data with default model type
     getPredictionData(selectedModel);
 
-    // Update prediction data when the user selects a different model
+    // update prediction data when the user selects a different model
     $('#modelSelect2').change(function() {
         selectedModel = $(this).val();
         getPredictionData(selectedModel);
     });
 
-    // Update prediction data every 5 minutes
+    // uspdate prediction data every 5 minutes
     setInterval(function() {
         getPredictionData(selectedModel);
-    }, 25000);
+    }, 10000);
 });

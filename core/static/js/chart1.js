@@ -42,7 +42,7 @@ $(document).ready(function() {
     chart1_prediction.render();
 
     // initial data
-    var usages1_current = [];
+    var generations1_current = [];
     var times1_current = [];
 
     setInterval(function() {
@@ -51,23 +51,23 @@ $(document).ready(function() {
             type: "GET",
             success: function(data) {
                 // get current time
-                var data1_dateTime = data['Time'];
-                var data1_usage = data['PV Productie (W)'];
+                var data1_dateTime = data['DateTime'];
+                var data1_generation = data['PV Productie (W)'];
 
                 // add the new values to the arrays
                 times1_current.push(data1_dateTime);
-                usages1_current.push(data1_usage);
+                generations1_current.push(data1_generation);
             
-                // only keep the latest 100 values
-                if (usages1_current.length > 100) {
-                    usages1_current = usages1_current.slice(usages1_current.length - 100);
-                    times1_current = times1_current.slice(times1_current.length - 100);
+                // only keep the latest 50 values
+                if (generations1_current.length > 50) {
+                    generations1_current = generations1_current.slice(generations1_current.length - 50);
+                    times1_current = times1_current.slice(times1_current.length - 50);
                 }
 
                 // update the chart
                 chart1_current.updateSeries([{
                     name: 'Power Generation',
-                    data: usages1_current
+                    data: generations1_current
                 }]);
 
                 chart1_current.updateOptions({
@@ -78,9 +78,8 @@ $(document).ready(function() {
                 });
             }
         });
-    }, 25000);
+    }, 10000);
 
-    // Function to get prediction data
     function getPredictionData(modelType) {
         $.ajax({
             url: '/get_pv_prediction',
@@ -89,15 +88,15 @@ $(document).ready(function() {
             success: function(response) {
                 var predictions = response['predictions'];
     
-                // Get the last real data time
+                // get the last real data time
                 var last_real_time_str = times1_current[times1_current.length - 1];
     
-                // Parse the last real time string into a Date object
-                var last_real_time = new Date(last_real_time_str.replace(' ', 'T') + 'Z'); // Adding 'Z' to indicate UTC time
+                // parse the last real time string into a Date object
+                var last_real_time = new Date(last_real_time_str.replace(' ', 'T') + 'Z'); // Z for UTC time
     
                 var times1_prediction = [];
     
-                // Start the prediction times 15 minutes after the last real time
+                // start the prediction times 15 minutes after the last real time
                 for (var i = 0; i < predictions.length; i++) {
                     last_real_time.setMinutes(last_real_time.getMinutes() + 15);
                     var year = last_real_time.getUTCFullYear();
@@ -126,19 +125,19 @@ $(document).ready(function() {
         });
     }
 
-    var selectedModel = 'lstm'; // Default to lstm
+    var selectedModel = 'lstm'; // default to lstm
 
-    // Initial call to fetch prediction data with default model type
+    // initial call to fetch prediction data with default model type
     getPredictionData(selectedModel);
 
-    // Update prediction data when the user selects a different model
+    // update prediction data when the user selects a different model
     $('#modelSelect').change(function() {
         selectedModel = $(this).val();
         getPredictionData(selectedModel);
     });
 
-    // Update prediction data every 5 minutes
+    // update prediction data every 5 minutes
     setInterval(function() {
         getPredictionData(selectedModel);
-    }, 25000);
+    }, 10000);
 });
