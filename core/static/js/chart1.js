@@ -78,7 +78,7 @@ $(document).ready(function() {
                 });
             }
         });
-    }, 1000);
+    }, 25000);
 
     // Function to get prediction data
     function getPredictionData(modelType) {
@@ -140,5 +140,5 @@ $(document).ready(function() {
     // Update prediction data every 5 minutes
     setInterval(function() {
         getPredictionData(selectedModel);
-    }, 1000);
+    }, 25000);
 });

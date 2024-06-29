@@ -97,46 +97,49 @@ def get_pv_prediction():
     global current_index
 
     model_type = request.args.get('model', default='lstm', type=str).lower()
-    
-    if model_type == 'gru':
-        model_pv = model_pv_gru
-        scaler_pv = scaler_pv_gru
-    else:
-        model_pv = model_pv_lstm
-        scaler_pv = scaler_pv_lstm
-    
+    seq_length_pv = 720
+
+    current_index = current_index if current_index is not None else int(len(data_pv) * 0.7)
+    if current_index + seq_length_pv > len(data_pv):
+        current_index = int(len(data_pv) * 0.7)
+
     # Get train data so the dimension can be used for the new data
     train_data_pv = data_pv[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
-    train_scaled_pv = scaler_pv.fit_transform(train_data_pv)
-    seq_length_pv = 720
-    
-    # Determine the starting index for the sliding window
-    if current_index is None:
-        current_index = int(len(data_pv) * 0.7)  # Start from the last 30% of the dataset
-    
-    # Ensure the sliding window doesn't go out of bounds
-    if current_index + seq_length_pv > len(data_pv):
-        current_index = int(len(data_pv) * 0.7)  # Reset to the start of the last 30% if out of bounds
-    
+    train_scaled_pv_gru = scaler_pv_gru.fit_transform(train_data_pv)
+    train_scaled_pv_lstm = scaler_pv_lstm.fit_transform(train_data_pv)
+
     # Get the new data for prediction using the sliding window
     new_data_pv = data_pv.iloc[current_index:current_index + seq_length_pv]
     new_data_pv = new_data_pv[['PV Productie (W)', 'Month', 'Day', 'Hour', 'Minute', 'Weekday', 'GHI (W/m^2)']]
-    new_data_scaled_pv = scaler_pv.transform(new_data_pv)
-    
-    # Update the current index for the next call
+    new_data_scaled_pv_gru = scaler_pv_gru.transform(new_data_pv)
+    new_data_scaled_pv_lstm = scaler_pv_lstm.transform(new_data_pv)
     current_index += 1
-    
+
     # Split into sequences
-    X_new_pv = create_new_sequences(new_data_scaled_pv, seq_length_pv)
-    
+    X_new_pv_gru = create_new_sequences(new_data_scaled_pv_gru, seq_length_pv)
+    X_new_pv_lstm = create_new_sequences(new_data_scaled_pv_lstm, seq_length_pv)
+
     # Predict
-    y_new_pred_scaled_pv = model_pv.predict(X_new_pv)
-    y_new_pred_reshaped_pv = y_new_pred_scaled_pv.reshape(-1, 1)
-    
-    dummy_features_new_pv = np.zeros((y_new_pred_reshaped_pv.shape[0], train_scaled_pv.shape[1] - 1))
-    y_new_pred_inv_pv = scaler_pv.inverse_transform(np.concatenate((y_new_pred_reshaped_pv, dummy_features_new_pv), axis=1))[:, 0]
-    
-    return jsonify({'predictions': y_new_pred_inv_pv.tolist()})
+    y_new_pred_scaled_pv_gru = model_pv_gru.predict(X_new_pv_gru)
+    y_new_pred_reshaped_pv_gru = y_new_pred_scaled_pv_gru.reshape(-1, 1)
+    y_new_pred_scaled_pv_lstm = model_pv_lstm.predict(X_new_pv_lstm)
+    y_new_pred_reshaped_pv_lstm = y_new_pred_scaled_pv_lstm.reshape(-1, 1)
+
+    dummy_features_new_pv_gru = np.zeros((y_new_pred_reshaped_pv_gru.shape[0], train_scaled_pv_gru.shape[1] - 1))
+    y_new_pred_inv_pv_gru = scaler_pv_gru.inverse_transform(np.concatenate((y_new_pred_reshaped_pv_gru, dummy_features_new_pv_gru), axis=1))[:, 0]
+    dummy_features_new_pv_lstm = np.zeros((y_new_pred_reshaped_pv_lstm.shape[0], train_scaled_pv_lstm.shape[1] - 1))
+    y_new_pred_inv_pv_lstm = scaler_pv_lstm.inverse_transform(np.concatenate((y_new_pred_reshaped_pv_lstm, dummy_features_new_pv_lstm), axis=1))[:, 0]
+
+    # Compute the average of the predictions from both models
+    y_new_pred_avg = (y_new_pred_inv_pv_gru + y_new_pred_inv_pv_lstm) / 2
+
+    # Return the predictions as a JSON response
+    if model_type == 'gru':
+        return jsonify({'predictions': y_new_pred_inv_pv_gru.tolist()})
+    if model_type == 'lstm':
+        return jsonify({'predictions': y_new_pred_inv_pv_lstm.tolist()})
+    if model_type == 'ensemble':
+        return jsonify({'predictions': y_new_pred_avg.tolist()})
 
 @chart_data.route('/get_household_power_consumption_prediction', methods=['GET'])
 def get_household_power_consumption_prediction():
