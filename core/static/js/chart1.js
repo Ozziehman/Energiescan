@@ -73,7 +73,7 @@ $(document).ready(function() {
                 chart1_current.updateOptions({
                     xaxis: {
                         categories: times1_current,
-                        min: Math.max(times1_current.length - 10, 0),
+                        min: 0,
                     }
                 });
             }
@@ -88,24 +88,34 @@ $(document).ready(function() {
             data: { model: modelType },
             success: function(response) {
                 var predictions = response['predictions'];
-
-                var current_time = new Date();
+    
+                // Get the last real data time
+                var last_real_time_str = times1_current[times1_current.length - 1];
+    
+                // Parse the last real time string into a Date object
+                var last_real_time = new Date(last_real_time_str.replace(' ', 'T') + 'Z'); // Adding 'Z' to indicate UTC time
+    
                 var times1_prediction = [];
-
+    
+                // Start the prediction times 15 minutes after the last real time
                 for (var i = 0; i < predictions.length; i++) {
-                    current_time.setMinutes(current_time.getMinutes() + 15);
-                    var hours = current_time.getHours().toString().padStart(2, '0');
-                    var minutes = current_time.getMinutes().toString().padStart(2, '0');
-                    var time_string = hours + ":" + minutes;
+                    last_real_time.setMinutes(last_real_time.getMinutes() + 15);
+                    var year = last_real_time.getUTCFullYear();
+                    var month = (last_real_time.getUTCMonth() + 1).toString().padStart(2, '0');
+                    var day = last_real_time.getUTCDate().toString().padStart(2, '0');
+                    var hours = last_real_time.getUTCHours().toString().padStart(2, '0');
+                    var minutes = last_real_time.getUTCMinutes().toString().padStart(2, '0');
+                    var seconds = last_real_time.getUTCSeconds().toString().padStart(2, '0');
+                    var time_string = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
                     times1_prediction.push(time_string);
                 }
-
+    
                 // Update the prediction chart
                 chart1_prediction.updateSeries([{
                     name: 'Power Generation Prediction',
                     data: predictions
                 }]);
-
+    
                 chart1_prediction.updateOptions({
                     xaxis: {
                         categories: times1_prediction,
