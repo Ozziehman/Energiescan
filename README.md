@@ -27,6 +27,9 @@ gebruik command:
 
 Zorg dat alle versies van python libraries correct zijn anders zal er een error ontstaan in het laden van de modellen, het is namelijk cruciaal dat tensorflow 2.10.0 wordt gebruikt met correcte library versies. De applicatie is getest om te werken op python versie `3.10.xx` de specifiek gebruiktes versies zijn `3.10.14` en `3.10.6`.
 
+# Jupyter Notebooks
+De repository is voorzien van een aantal jupyter notebooks waarin alle preprocessing stappen zijn uitgewerkt en de modellen worden getraind. Om modellen opnieuw te trainen met andere parameters en/of de preprocessing aan te passen kunnen de notebooks worden geraadpleegd.
+
 # Draaien van programma
 Zodra alle libraries goed zijn geinstalleerd kan het programma gedraaid worden door `flask run` te typen in in de terminal en op de link te klikken die verschijnt.
 
